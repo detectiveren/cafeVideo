@@ -38,9 +38,55 @@
                         <div class="cafe-watch-title">
                             <h2>{{ video[2] }}</h2>
                         </div>
-                        <p>{{ creatorUsername[0] }}</p>
-                        <p>{{ video[3] }}</p>
-                        <p>{{ video[4] }}</p>
+                        <div class="cafe-align-watch-details">
+                            <div class="cafe-align-creator-stats">
+                                <div class="cafe-align-creator-profile">
+                                    <a class="account-link" href="{{ url_for('getAccountProfile', id=creatorUserID) }}">
+                                        <div class="cafe-watch-creator-profile-picture">
+                                            <img class="cafe-watch-creator-profile-picture-image" src="{{ url_for('static', filename='images/profilepicturetest.jpg') }}">
+                                        </div>
+                                        <div class="cafe-watch-creator-name-subscriber-count">
+                                            <p>{{ creatorUsername[0] }}</p>
+                                            <p>1.1M Subscribers</p>
+                                        </div>
+                                    </a>
+                                </div>
+                                <div class="cafe-watch-video-stats">
+                                    <div class="cafe-watch-views">
+                                        <div class="cafe-watch-views-title-underline">
+                                            <p class="cafe-watch-views-title">Views</p>
+                                        </div>
+                                        <p class="cafe-center-text">100</p>
+                                    </div>
+                                    <div class="cafe-watch-video-stats-vertical-divider"></div>
+                                    <div class="cafe-watch-likes">
+                                        <div class="cafe-watch-likes-title-underline">
+                                            <p>Likes</p>
+                                        </div>
+                                        <p class="cafe-center-text">100</p>
+                                    </div>
+                                    <div class="cafe-watch-video-stats-vertical-divider"></div>
+                                    <div class="cafe-watch-subscribe">
+                                        <div class="cafe-watch-subscribe-button">
+                                            <button class="cafe-comment-button">Subscribe</button>
+                                        </div>
+                                        <div class="cafe-watch-like-button">
+                                            <button class="cafe-comment-button">Like</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="cafe-align-watch-description">
+                                <div class="cafe-watch-description-title">
+                                    <p>Description</p>
+                                </div>
+                                <p class="cafe-align-description-contents">{{ video[3] }}</p>
+                                <div class="cafe-watch-video-tags-title">
+                                    <p>Video Tags</p>
+                                </div>
+                                <p class="cafe-align-description-contents">{{ video[4] }}</p>
+                            </div>
+                        </div>
                         <!--
                         <form action="/commentOnVideo" method="POST" class="cafe-login-details">
                             <input type="text" name="comment" placeholder="Comment on this video" required><br><br>
@@ -54,7 +100,7 @@
                 </div>
                 <div class="cafe-comment-section-body">
                     <div class="cafe-post-comment">
-                        <h2>Comment Section</h2>
+                        <h2>Comment Section - {{ num_of_comments }} Comments</h2>
                         {% if username %}
                         <form action="/postComment" method="POST" class="cafe-comment-form">
                             <input type="text" name="postComment" placeholder="Comment on this video" class="cafe-comment-box" required>
@@ -89,11 +135,18 @@
                             <div class="cafe-video-post-thumbnail">
                                 <img class="cafe-video-post-thumbnail" src="{{ url_for('static', filename='images/videotemplate.png') }}">
                             </div>
-                            <div class="cafe-video-post-title">
-                                <p>{{ video[2] }}</p>  <!-- Video Title -->
-                            </div>
-                            <div class="cafe-video-post-channel">
-                                <p>{{ video[1] }}</p>  <!-- Uploader Username -->
+                            <div class="cafe-align-video-post-details">
+                                <div class="cafe-video-post-profile-picture">
+                                    <img class="cafe-video-post-profile-picture-image" src="{{ url_for('static', filename='images/profilepicturetest.jpg') }}">
+                                </div>
+                                <div class="cafe-video-post-details">
+                                    <div class="cafe-video-post-title">
+                                        <p>{{ video[2] }}</p>  <!-- Video Title -->
+                                    </div>
+                                    <div class="cafe-video-post-channel">
+                                        <p>{{ video[1] }}</p>  <!-- Uploader Username -->
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </a>

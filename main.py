@@ -164,8 +164,11 @@ def watchPage():
                             ORDER BY commentID DESC 
                         """, (videoID,))
             comments = cursor.fetchall()
+
+            num_of_comments = len(comments)
             return render_template('watch.html', video=video, username=username, videos=videos,
-                                   creatorUsername=creatorUsername, comments=comments, userID=session.get("userID"))
+                                   creatorUsername=creatorUsername, comments=comments, userID=session.get("userID"),
+                                   creatorUserID=video[1], num_of_comments=num_of_comments)
         else:
             return "Video not found", 404
     else:

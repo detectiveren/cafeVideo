@@ -31,8 +31,8 @@
                     <h1>Login to cafeVideo!</h1>
                 </div>
                 <form action="/loginAuth" method="POST" class="cafe-login-details">
-                    <input type="text" name="username" placeholder="Enter your username" class="cafe-comment-box" required>
-                    <input type="password" name="password" placeholder="Enter your password" class="cafe-comment-box" required>
+                    <input type="text" name="username" placeholder="Enter your username" class="cafe-login-box" required>
+                    <input type="password" name="password" placeholder="Enter your password" class="cafe-login-box" required>
                     <button type="submit" class="cafe-comment-button">Login</button>
                 </form>
                 {% if error %}
@@ -44,9 +44,9 @@
                     <h1>Register an account on cafeVideo!</h1>
                 </div>
                 <form action="/registerAccount" method="POST" class="cafe-register-details">
-                    <input type="text" name="username" placeholder="Enter your username" required>
-                    <input type="password" name="password" placeholder="Enter your password" required>
-                    <button type="submit">Register</button>
+                    <input type="text" name="username" placeholder="Enter your username" class="cafe-login-box" required>
+                    <input type="password" name="password" placeholder="Enter your password" class="cafe-login-box" required>
+                    <button type="submit" class="cafe-comment-button">Register</button>
                 </form>
                 {% if error %}
                     <p style="color: red">{{error}}</p>
