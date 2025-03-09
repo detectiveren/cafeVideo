@@ -27,7 +27,7 @@ def indexPage():
 
     # Fetch the latest videos for the new videos feed
     cursor.execute("""
-            SELECT videos.videoID, accounts.username, videos.videoTitle
+            SELECT videos.videoID, accounts.username, videos.videoTitle, videos.views
             FROM videos
             JOIN accounts ON videos.userID = accounts.userID
             ORDER BY videoID DESC  -- Shows newest first
@@ -147,10 +147,22 @@ def watchPage():
         if video:
             # If there is a video go to the video
             # Fetch the latest videos for the new videos feed
+            cursor.execute("SELECT views FROM videos WHERE videoID = ?", (videoID,))
+            viewCount = cursor.fetchone()
+            viewCount = viewCount[0]
+            if viewCount:
+                viewCount = viewCount + 1
+                currentViewCount = viewCount
+                cursor.execute("UPDATE videos SET views = ? WHERE videoID = ?", (viewCount, videoID))
+            else:
+                addFirstView = 1
+                cursor.execute("UPDATE videos SET views = ? WHERE videoID = ?", (addFirstView, videoID))
+                currentViewCount = addFirstView
+            conn.commit()
             cursor.execute("SELECT username FROM accounts WHERE userID = ?", (video[1],))
             creatorUsername = cursor.fetchone()
             cursor.execute("""
-                            SELECT videos.videoID, accounts.username, videos.videoTitle
+                            SELECT videos.videoID, accounts.username, videos.videoTitle, videos.views
                             FROM videos
                             JOIN accounts ON videos.userID = accounts.userID
                             ORDER BY videoID DESC  -- Shows newest first
@@ -166,9 +178,27 @@ def watchPage():
             comments = cursor.fetchall()
 
             num_of_comments = len(comments)
+            cursor.execute("SELECT * FROM subscriptions WHERE subscribedToUserID = ?", (video[1],))
+            subscribers = cursor.fetchall()
+            num_of_subscribers = len(subscribers)
+            cursor.execute("SELECT * FROM subscriptions WHERE userID = ? AND subscribedToUserID = ?",
+                           (session.get("userID"), video[1]))
+            isSubscribedToChannel = cursor.fetchone()
+            if isSubscribedToChannel:
+                isSubscribedToChannel = isSubscribedToChannel[0]
+            cursor.execute("SELECT * FROM likedVideos WHERE videoID = ?", (videoID,))
+            likes = cursor.fetchall()
+            num_of_likes = len(likes)
+            cursor.execute("SELECT * FROM likedVideos WHERE videoID = ? AND userID = ?", (videoID, session.get("userID")))
+            isLikedVideo = cursor.fetchone()
+            if isLikedVideo:
+                isLikedVideo = isLikedVideo[0]
             return render_template('watch.html', video=video, username=username, videos=videos,
                                    creatorUsername=creatorUsername, comments=comments, userID=session.get("userID"),
-                                   creatorUserID=video[1], num_of_comments=num_of_comments)
+                                   creatorUserID=video[1], num_of_comments=num_of_comments,
+                                   currentViewCount=currentViewCount, num_of_subscribers=num_of_subscribers,
+                                   isSubscribedToChannel=isSubscribedToChannel, num_of_likes=num_of_likes,
+                                   isLikedVideo=isLikedVideo)
         else:
             return "Video not found", 404
     else:
@@ -206,7 +236,7 @@ def searchForVideo():
 
         # Fetch the latest videos for the new videos feed
         cursor.execute("""
-                    SELECT videos.videoID, accounts.username, videos.videoTitle
+                    SELECT videos.videoID, accounts.username, videos.videoTitle, videos.views
                     FROM videos
                     JOIN accounts ON videos.userID = accounts.userID
                     WHERE videos.videoTitle LIKE ?
@@ -217,7 +247,8 @@ def searchForVideo():
         num_of_videos = len(videos)
 
         conn.close()
-        return render_template("search.html", searchQuery=searchQuery, username=username, videos=videos, num_of_videos=num_of_videos, userID=session.get("userID"))
+        return render_template("search.html", searchQuery=searchQuery, username=username, videos=videos,
+                               num_of_videos=num_of_videos, userID=session.get("userID"))
     else:
         return redirect(url_for("indexPage"))
 
@@ -246,7 +277,7 @@ def getAccountProfile():
 
             # Fetch the latest videos for the new videos feed
             cursor.execute("""
-                                SELECT videos.videoID, accounts.username, videos.videoTitle
+                                SELECT videos.videoID, accounts.username, videos.videoTitle, videos.views
                                 FROM videos
                                 JOIN accounts ON videos.userID = accounts.userID
                                 WHERE videos.userID = ?
@@ -254,9 +285,77 @@ def getAccountProfile():
                             """, (userID,))
             videos = cursor.fetchall()  # List of tuples
 
-            return render_template("profile.html", username=username, profileDetails=profileDetails, videos=videos, userID=session.get("userID"))
+            return render_template("profile.html", username=username, profileDetails=profileDetails, videos=videos,
+                                   userID=session.get("userID"))
         else:
             return redirect(url_for("indexPage"))
+    else:
+        return redirect(url_for("indexPage"))
+
+
+@cafe.route('/subscribeUser')
+def subscribeToUser():
+    if "userID" not in session:
+        return redirect(url_for('loginPage'))
+
+    creatorUserID = request.args.get('creatorID')
+    subscriberUserID = session["userID"]
+
+    conn = sqlite3.connect('cafeDatabase.db')
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM subscriptions WHERE userID = ? AND subscribedToUserID = ?",
+                   (subscriberUserID, creatorUserID))
+    isSubscribed = cursor.fetchone()
+
+    if isSubscribed:
+        cursor.execute("DELETE FROM subscriptions WHERE userID = ? AND subscribedToUserID = ?",
+                       (subscriberUserID, creatorUserID))
+        conn.commit()
+        print("User has been unsubscribed")
+        conn.close()
+        return redirect(request.referrer)
+    else:
+        cursor.execute("INSERT INTO subscriptions (userID, subscribedToUserID) VALUES (?, ?)",
+                       (subscriberUserID, creatorUserID))
+        conn.commit()
+        conn.close()
+        return redirect(request.referrer)
+
+
+@cafe.route('/likeVideo')
+def likeVideoFromCreatorID():
+    if "userID" not in session:
+        return redirect(url_for('loginPage'))
+
+    videoID = request.args.get('videoID')
+    creatorUserID = request.args.get('creatorID')
+    userID = session["userID"]
+
+    conn = sqlite3.connect('cafeDatabase.db')
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM videos WHERE videoID = ?", (videoID,))
+    videoExists = cursor.fetchone()
+    if videoExists:
+
+        cursor.execute("SELECT * FROM likedVideos WHERE videoID = ? AND creatorID = ? AND userID = ?",
+                   (videoID, creatorUserID, userID))
+        isLikedVideo = cursor.fetchone()
+
+        if isLikedVideo:
+            cursor.execute("DELETE FROM likedVideos WHERE videoID = ? AND creatorID = ? AND userID = ?",
+                       (videoID, creatorUserID, userID))
+            conn.commit()
+            print("User has unliked the video")
+            conn.close()
+            return redirect(request.referrer)
+        else:
+            cursor.execute("INSERT INTO likedVideos (videoID, creatorID, userID) VALUES (?, ?, ?)",
+                       (videoID, creatorUserID, userID))
+            conn.commit()
+            conn.close()
+            return redirect(request.referrer)
     else:
         return redirect(url_for("indexPage"))
 

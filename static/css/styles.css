@@ -406,6 +406,16 @@ video {
     align-self: flex-end;
 }
 
+.cafe-comment-button-liked {
+    width: 100px;
+    border-radius: 5px;
+    text-decoration: None;
+    background-color: #4A6D8C;
+    color: white;
+    border: none;
+    align-self: flex-end;
+}
+
 .cafe-comment-box {
     width: 970px;
     border-radius: 5px;
@@ -563,6 +573,7 @@ video {
     flex-direction: column;
     line-height: 0.1;
     margin-left: 10px;
+    display: block;
 }
 
 .cafe-video-post-profile-picture {
@@ -731,6 +742,15 @@ video {
 
 .cafe-watch-views-title {
     align-self: flex-center;
+}
+
+.cafe-video-post-views {
+    margin-left: 10px;
+}
+
+.cafe-hide-link-tag {
+    background-color: rgba(0,0,0,0);
+    width: 100px;
 }
 
 body, html {
