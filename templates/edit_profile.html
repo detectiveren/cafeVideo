@@ -41,7 +41,7 @@
                 <img class="cafe-profile-banner" src="{{ url_for('static', filename='images/profilebannertemplate.png') }}">
                 <img class="cafe-profile-picture-showcase-image" src="{{ url_for('static', filename='images/profilepicturetest.jpg') }}">
                 <p>Upload a profile picture and thumbnail to make your profile more personal</p>
-                <form action="/" method="POST" class="cafe-login-details" enctype="multipart/form-data">
+                <form action="/confirmProfileEdit" method="POST" class="cafe-login-details" enctype="multipart/form-data">
                     <label for="profilePicture" class="cafe-upload-button otherParagraphs">Upload a profile picture</label>
                     <input type="file" id="profilePicture" name="profilePicture" accept="image/*" hidden><br><br>
                     <label for="profileBanner" class="cafe-upload-button otherParagraphs">Upload a profile banner</label>

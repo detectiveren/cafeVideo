@@ -66,7 +66,7 @@
                             </div>
                             <div class="cafe-align-video-post-details">
                                 <div class="cafe-video-post-profile-picture">
-                                    <img class="cafe-video-post-profile-picture-image" src="{{ url_for('static', filename='images/profilepicturetest.jpg') }}">
+                                    <img class="cafe-video-post-profile-picture-image" src="{{ url_for('static', filename='profile/pfp/' + (video[6] if video[6] else 'profilepicturetest.jpg')) }}">
                                 </div>
                                 <div class="cafe-video-post-details">
                                     <div class="cafe-video-post-title">

@@ -28,6 +28,7 @@ def uploadVideoToDatabase(userID, title, description, videoTags, filename, thumb
 
 def sendCommentToDatabase(videoID, userID, comment):
     conn = sqlite3.connect('cafeDatabase.db')
+    conn.execute('PRAGMA foreign_keys = ON')
 
     cursor = conn.cursor()
 
@@ -37,6 +38,63 @@ def sendCommentToDatabase(videoID, userID, comment):
         print("Comment sent")
     except sqlite3.IntegrityError:
         print("Error with posting comment")
+    finally:
+        cursor.close()
+        conn.close()
+
+
+def uploadProfilePictureToDatabase(profilePictureFilename, userID):
+    conn = sqlite3.connect('cafeDatabase.db')
+    conn.execute('PRAGMA foreign_keys = ON')
+
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("UPDATE profiles SET profilePicture = ? WHERE userID = ?",
+                       (profilePictureFilename, userID))
+        conn.commit()
+        return True, "Uploaded successfully"
+    except sqlite3.IntegrityError:
+        print("Error with updating profile settings")
+        return False, "Error with updating profile settings"
+    finally:
+        cursor.close()
+        conn.close()
+
+
+def uploadProfileBannerToDatabase(profileBannerFilename, userID):
+    conn = sqlite3.connect('cafeDatabase.db')
+    conn.execute('PRAGMA foreign_keys = ON')
+
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("UPDATE profiles SET profileBanner = ? WHERE userID = ?",
+                       (profileBannerFilename, userID))
+        conn.commit()
+        return True, "Uploaded successfully"
+    except sqlite3.IntegrityError:
+        print("Error with updating profile settings")
+        return False, "Error with updating profile settings"
+    finally:
+        cursor.close()
+        conn.close()
+
+
+def sendProfileBioToDatabase(bio, userID):
+    conn = sqlite3.connect('cafeDatabase.db')
+    conn.execute('PRAGMA foreign_keys = ON')
+
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("UPDATE profiles SET profileBio = ? WHERE userID = ?",
+                       (bio, userID))
+        conn.commit()
+        return True, "Uploaded successfully"
+    except sqlite3.IntegrityError:
+        print("Error with updating profile settings")
+        return False, "Error with updating profile settings"
     finally:
         cursor.close()
         conn.close()

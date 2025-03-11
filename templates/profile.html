@@ -43,12 +43,12 @@
         <div class="cafe-video-list-body">
             <div class="cafe-profile-list-contents-header">
                 <div class="cafe-profile-list-contents-header-banner">
-                    <img class="cafe-profile-banner" src="{{ url_for('static', filename='images/profilebannertemplate.png') }}">
+                    <img class="cafe-profile-banner" src="{{ url_for('static', filename='profile/banner/' + (profileDetails[10] if profileDetails[10] else 'profilebannertemplate.png')) }}">
                 </div>
                 <p class="cafe-profile-list-title">{{ profileDetails[1] }}'s Profile</p>
                 <div class="cafe-profile-showcases-row">
                     <div class="cafe-profile-picture-showcase">
-                        <img class="cafe-profile-picture-showcase-image" src="{{ url_for('static', filename='images/profilepicturetest.jpg') }}">
+                        <img class="cafe-profile-picture-showcase-image" src="{{ url_for('static', filename='profile/pfp/' + (profileDetails[9] if profileDetails[9] else 'profilepicturetest.jpg')) }}">
                     </div>
                     <div class="cafe-profile-showcase-small">
                         <div class="cafe-profile-showcase-bio-title-layout">

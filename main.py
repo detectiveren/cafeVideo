@@ -11,10 +11,16 @@ cafe.config['UPLOAD_FOLDER'] = 'static/videos/'
 cafe.config['ALLOWED_EXTENSIONS'] = {'mp4', 'avi', 'mov', 'mkv'}
 cafe.config['UPLOAD_THUMBNAILS_FOLDER'] = 'static/thumbnails'
 cafe.config['ALLOWED_THUMBNAIL_EXTENSIONS'] = {'jpg', 'png', 'webp'}
+cafe.config['UPLOAD_PROFILE_PICTURE_FOLDER'] = 'static/profile/pfp'
+cafe.config['ALLOWED_PROFILE_PICTURE_EXTENSIONS'] = {'jpg', 'png', 'webp', 'gif'}
+cafe.config['UPLOAD_PROFILE_BANNER_FOLDER'] = 'static/profile/banner'
+cafe.config['ALLOWED_PROFILE_BANNER_EXTENSIONS'] = {'jpg', 'png', 'webp', 'gif'}
 
 # Ensure the directories for these folders exist
 os.makedirs(cafe.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(cafe.config['UPLOAD_THUMBNAILS_FOLDER'], exist_ok=True)
+os.makedirs(cafe.config['UPLOAD_PROFILE_PICTURE_FOLDER'], exist_ok=True)
+os.makedirs(cafe.config['UPLOAD_PROFILE_BANNER_FOLDER'], exist_ok=True)
 
 
 def allowedFiletypes(filename, allowedExtensions):
@@ -36,9 +42,10 @@ def indexPage():
 
     # Fetch the latest videos for the new videos feed
     cursor.execute("""
-            SELECT videos.videoID, accounts.username, videos.videoTitle, videos.views, videos.videoThumbnail, videos.datetime
+            SELECT videos.videoID, accounts.username, videos.videoTitle, videos.views, videos.videoThumbnail, videos.datetime, profiles.profilePicture
             FROM videos
             JOIN accounts ON videos.userID = accounts.userID
+            JOIN profiles ON profiles.userID = accounts.userID
             ORDER BY videoID DESC  -- Shows newest first
         """)
     videos = cursor.fetchall()  # List of tuples
@@ -146,9 +153,7 @@ def uploadVideo():
             thumbnailFilename = secure_filename(thumbnail.filename)
             thumbnailPath = os.path.join(cafe.config['UPLOAD_THUMBNAILS_FOLDER'], thumbnailFilename)
             thumbnail.save(thumbnailPath)
-            print(thumbnailPath)
             userID = session.get('userID')
-            print(filename)
             title = request.form['title']
             description = request.form['description']
             videoTags = request.form['videoTags']
@@ -174,7 +179,10 @@ def watchPage():
         conn = sqlite3.connect('cafeDatabase.db')
         conn.execute('PRAGMA foreign_keys = ON')
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM videos WHERE videoID = ?", (videoID,))
+        cursor.execute("""SELECT * 
+                                FROM videos 
+                                JOIN profiles ON profiles.userID = videos.userID
+                                WHERE videoID = ?""", (videoID,))
         video = cursor.fetchone()
 
         if video:
@@ -195,9 +203,10 @@ def watchPage():
             cursor.execute("SELECT username FROM accounts WHERE userID = ?", (video[1],))
             creatorUsername = cursor.fetchone()
             cursor.execute("""
-                            SELECT videos.videoID, accounts.username, videos.videoTitle, videos.views, videos.videoThumbnail, videos.datetime
+                            SELECT videos.videoID, accounts.username, videos.videoTitle, videos.views, videos.videoThumbnail, videos.datetime, profiles.profilePicture
                             FROM videos
                             JOIN accounts ON videos.userID = accounts.userID
+                            JOIN profiles ON profiles.userID = accounts.userID
                             ORDER BY videoID DESC  -- Shows newest first
                         """)
             videos = cursor.fetchall()  # List of tuples
@@ -273,13 +282,16 @@ def searchForVideo():
 
         # Fetch the latest videos for the new videos feed
         cursor.execute("""
-                    SELECT videos.videoID, accounts.username, videos.videoTitle, videos.views, videos.videoThumbnail, videos.datetime
+                    SELECT videos.videoID, accounts.username, videos.videoTitle, videos.views, videos.videoThumbnail, videos.datetime, profiles.profilePicture
                     FROM videos
                     JOIN accounts ON videos.userID = accounts.userID
+                    JOIN profiles ON profiles.userID = accounts.userID
                     WHERE videos.videoTitle LIKE ?
                     ORDER BY videoID DESC  -- Shows newest first
                 """, (searchQueryForDB,))
         videos = cursor.fetchall()  # List of tuples
+
+        print(videos)
 
         num_of_videos = len(videos)
 
@@ -415,6 +427,60 @@ def editUserProfile():
         return render_template("edit_profile.html", username=username, userID=userID)
     else:
         return redirect(url_for('indexPage'))
+
+
+@cafe.route('/confirmProfileEdit', methods=["POST"])
+def saveProfileSettings():
+    if request.method == "POST":
+        profileBanner = request.files["profileBanner"]
+        profilePicture = request.files["profilePicture"]
+        profileBannerDefault = "profilebannertemplate.png"
+        profilePictureDefault = "profilepicturetest.png"
+        userID = session.get('userID')
+        bio = request.form["bio"]
+        success = False
+        message = ""
+
+        if profileBanner.filename == '':
+            profileBanner = profileBannerDefault
+
+        if profilePicture.filename == '':
+            profilePicture.filename = profilePictureDefault
+
+        if 'profileBanner' not in request.files:
+            profileBanner.filename = profileBannerDefault
+
+        if 'profilePicture' not in request.files:
+            profilePicture.filename = profilePictureDefault
+
+        # cursor.execute("UPDATE videos SET views = ? WHERE videoID = ?", (viewCount, videoID))
+
+        if profilePicture and allowedFiletypes(profilePicture.filename,
+                                               cafe.config['ALLOWED_PROFILE_PICTURE_EXTENSIONS']):
+            profilePictureFilename = secure_filename(profilePicture.filename)
+            profilePicturePath = os.path.join(cafe.config['UPLOAD_PROFILE_PICTURE_FOLDER'], profilePictureFilename)
+            profilePicture.save(profilePicturePath)
+
+            successfulProfilePictureUpload, message = post.uploadProfilePictureToDatabase(profilePictureFilename, userID)
+            if successfulProfilePictureUpload:
+                success = True
+
+        if profileBanner and allowedFiletypes(profileBanner.filename, cafe.config['ALLOWED_PROFILE_BANNER_EXTENSIONS']):
+            profileBannerFilename = secure_filename(profileBanner.filename)
+            profileBannerPath = os.path.join(cafe.config['UPLOAD_PROFILE_BANNER_FOLDER'], profileBannerFilename)
+            profileBanner.save(profileBannerPath)
+
+            successfulProfileBannerUpload, message = post.uploadProfileBannerToDatabase(profileBannerFilename, userID)
+            if successfulProfileBannerUpload:
+                success = True
+
+        if bio != '':
+            success, message = post.sendProfileBioToDatabase(bio, userID)
+
+        if success:
+            return redirect(url_for('getAccountProfile'))
+        else:
+            return render_template('edit_profile.html', error=message)
 
 
 cafe.run("127.0.0.1", 5000, debug=True)
