@@ -15,8 +15,12 @@
             </form>
             <div class="cafe-header-navbar-item-right cafe-header-navbar-item">
                 {% if username %}
-                    <a class="cafe-profile-link" href="{{ url_for('getAccountProfile', id=userID) }}">{{username}}</a>
-                    <a href="{{ url_for('logout') }}">Logout</a>
+                    <a class="cafe-navbar-upload-button" href="{{ url_for('upload') }}">
+                        <img class="cafe-navbar-upload-button-img" src="{{ url_for('static', filename='images/upload.png') }}">
+                    </a>
+                    <a class="cafe-profile-link" href="{{ url_for('getAccountProfile', id=userID) }}">
+                        <img class="cafe-navbar-pfp" src="{{ url_for('static', filename='profile/pfp/' + (profileInfo[0] if profileInfo[0] else 'profilepicturetest.png')) }}">
+                    </a>
                 {% else %}
                     <!-- If user is not logged in -->
                     <a href="{{ url_for('loginPage') }}">Login</a>
@@ -31,6 +35,8 @@
             </div>
             <div class="cafe-sidebar-left-contents">
                 <p>Edit your profile to make your profile look unique!</p>
+                <br>
+                <a href="{{ url_for('logout') }}">Logout</a>
             </div>
         </div>
         <div class="cafe-video-list-body">
@@ -38,8 +44,8 @@
                 <div class="cafe-login-title">
                     <h1>Edit Profile</h1>
                 </div>
-                <img class="cafe-profile-banner" src="{{ url_for('static', filename='images/profilebannertemplate.png') }}">
-                <img class="cafe-profile-picture-showcase-image" src="{{ url_for('static', filename='images/profilepicturetest.jpg') }}">
+                <img class="cafe-profile-banner cafe-box-shadow-other" src="{{ url_for('static', filename='profile/banner/' + (profileInfo[1] if profileInfo[1] else 'profilebannertemplate.png')) }}">
+                <img class="cafe-profile-picture-showcase-image cafe-box-shadow-other" src="{{ url_for('static', filename='profile/pfp/' + (profileInfo[0] if profileInfo[0] else 'profilepicturetest.png')) }}">
                 <p>Upload a profile picture and thumbnail to make your profile more personal</p>
                 <form action="/confirmProfileEdit" method="POST" class="cafe-login-details" enctype="multipart/form-data">
                     <label for="profilePicture" class="cafe-upload-button otherParagraphs">Upload a profile picture</label>
@@ -48,7 +54,7 @@
                     <input type="file" id="profileBanner" name="profileBanner" accept="image/*" hidden><br><br>
                     <div class="cafe-align-label-input">
                         <label for="bio">Bio</label>
-                        <textarea id="bio" name="bio" maxlength="240" placeholder="Enter a bio" class="cafe-edit-bio-box" required></textarea><br><br>
+                        <textarea id="bio" name="bio" maxlength="240" placeholder="Enter a bio" class="cafe-edit-bio-box"></textarea><br><br>
                     </div>
                     <button type="submit" class="cafe-comment-button">Save</button>
                 </form>

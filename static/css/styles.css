@@ -394,6 +394,7 @@ video {
     display: flex;
     flex-direction: row;
     margin-left: 10px;
+    gap: 5px;
 }
 
 .cafe-comment-details {
@@ -532,6 +533,7 @@ video {
 }
 
 .cafe-profile-link {
+    margin-top: 2px;
     background-color: rgba(0,0,0,0);
 }
 
@@ -545,6 +547,7 @@ video {
     border: 2px solid #C78A4B;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5); /* Subtle shadow for depth */
     min-width: 200px;
+    max-width: 500px;
     height: 100px;
     border-radius: 5px;
     display: inline-block;
@@ -577,7 +580,7 @@ video {
     margin-left: 10px;
     margin-right: 10px;
     font-size: 12px;
-    max-width: 400px;
+    max-width: 500px;
     height: 70px;
 }
 
@@ -789,8 +792,69 @@ video {
     width: 100px;
 }
 
+.cafe-profile-list-settings {
+    margin-left: auto;
+}
+
+.cafe-profile-list-title-unique {
+    background-color: #C78A4B;  /* Dark background for title */
+    color: #f1f1f1;  /* White text color for title */
+    padding: 10px;
+    border-radius: 5px;
+    text-align: left;  /* Center the title */
+    margin-bottom: 15px;  /* Space between title and video posts */
+    display: flex;
+    flex-direction: row;
+    height: 20px;
+    align-items: center;
+}
+
+.cafe-not-found {
+    width: 100%;
+    text-align: center;
+    color: #2e1f16;
+    margin-top: 10%;
+}
+
+.cafe-box-shadow-other {
+    border: 2px solid #C78A4B;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5); /* Subtle shadow for depth */
+}
+
+.cafe-navbar-upload-button {
+    background-color: #C78A4B;
+    display: flex;
+    align-items: center;
+    width: 1px !important;
+    height: 15px !important;
+}
+
+.cafe-navbar-upload-button-img {
+    background-color: rgba(0,0,0,0);
+    margin-left: -11px;
+    width: 25px;
+    height: 25px;
+}
+
+.cafe-navbar-pfp {
+    border: 2px solid #C78A4B;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5); /* Subtle shadow for depth */
+    width: 30px;
+    height: 30px;
+    border-radius: 5px;
+}
+
+.cafe-comment-pfp {
+    border: 2px solid #C78A4B;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5); /* Subtle shadow for depth */
+    width: 30px;
+    height: 30px;
+    border-radius: 5px;
+    margin-top: 10px;
+}
+
 body, html {
-    background-color: #121212;
+    background-color: #8A7A5E;
     margin: 0;
     padding: 0;
 }

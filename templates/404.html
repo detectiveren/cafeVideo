@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <title>cafeVideo</title>
+</head>
+<body>
+    <div class="cafe-header-navbar">
+        <div class="cafe-header-navbar-container">
+            <!-- <div class="cafe-header-navbar-item"><button>Sidebar Test</button></div> -->
+            <div class="cafe-header-navbar-item"><a class="cafe-navbar-title" href="{{ url_for('indexPage') }}"><h2>cafeVideo</h2></a></div>
+
+            <form action="/searchRequest" method="POST" class="cafe-header-navbar-item cafe-search-layout">
+                <input type="text" name="search" placeholder="Search for a video" class="cafe-search-box" required>
+            </form>
+
+            <!-- If the user is logged in, show username and logout button -->
+            <div class="cafe-header-navbar-item-right cafe-header-navbar-item">
+                {% if username %}
+                    <a class="cafe-navbar-upload-button" href="{{ url_for('upload') }}">
+                        <img class="cafe-navbar-upload-button-img" src="{{ url_for('static', filename='images/upload.png') }}">
+                    </a>
+                    <a class="cafe-profile-link" href="{{ url_for('getAccountProfile', id=userID) }}">
+                        <img class="cafe-navbar-pfp" src="{{ url_for('static', filename='profile/pfp/' + (profilePicture if profilePicture else 'profilepicturetest.png')) }}">
+                    </a>
+                {% else %}
+                    <!-- If user is not logged in -->
+                    <a href="{{ url_for('loginPage') }}">Login</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="cafe-main-body">
+        <div class="cafe-not-found">
+            <h1>404</h1>
+            <p>Looks like you’re lost. This page isn’t here.</p>
+        </div>
+    </div>
+    <!-- Rename to cafeChannels -->
+
+</body>
+</html>

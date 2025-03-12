@@ -39,6 +39,8 @@ def indexPage():
     conn = sqlite3.connect('cafeDatabase.db')
     conn.execute('PRAGMA foreign_keys = ON')
     cursor = conn.cursor()
+    username = session.get("username")
+    userID = session.get("userID")
 
     # Fetch the latest videos for the new videos feed
     cursor.execute("""
@@ -49,15 +51,15 @@ def indexPage():
             ORDER BY videoID DESC  -- Shows newest first
         """)
     videos = cursor.fetchall()  # List of tuples
-    # cursor.execute("""
-    #        SELECT videos.videoID, accounts.username, videos.videoTitle, videos.views, videos.videoThumbnail
-    #        FROM videos
-    #        JOIN accounts ON video.userID = accounts.userID
-    #
-    #    """)
+
+    if username:
+        cursor.execute("SELECT profilePicture FROM profiles WHERE userID = ?", (userID,))
+        profilePicture = cursor.fetchone()
+    else:
+        profilePicture = ["profilepicturetest.png"]
     conn.close()
-    return render_template('index.html', username=session.get("username"), videos=videos, userID=session.get("userID"),
-                           time_ago=time_ago)
+    return render_template('index.html', username=username, videos=videos, userID=userID,
+                           time_ago=time_ago, profilePicture=profilePicture[0])
 
 
 @cafe.route('/login')
@@ -117,10 +119,18 @@ def logout():
 def upload():
     """Webpage for uploading videos"""
     username = session.get('username')
+    userID = session.get('userID')
 
     # If the user is not logged in, send them to the login page
     if username:
-        return render_template("upload.html", username=username, userID=session.get("userID"))
+        conn = sqlite3.connect('cafeDatabase.db')
+        conn.execute('PRAGMA foreign_keys = ON')
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT profilePicture FROM profiles WHERE userID = ?", (userID,))
+        profilePicture = cursor.fetchone()
+
+        return render_template("upload.html", username=username, userID=session.get("userID"), profilePicture=profilePicture[0])
     else:
         return redirect(url_for('loginPage'))
 
@@ -173,6 +183,7 @@ def watchPage():
     videoID = request.args.get('v')
     session['redirectToVideoID'] = videoID
     username = session.get('username')
+    userID = session.get('userID')
 
     if videoID:
         # Retrieve video details
@@ -211,13 +222,15 @@ def watchPage():
                         """)
             videos = cursor.fetchall()  # List of tuples
             cursor.execute("""
-                            SELECT comments.commentID, accounts.username, comments.comment
+                            SELECT comments.commentID, accounts.username, comments.comment, profiles.profilePicture
                             FROM comments
                             JOIN accounts ON comments.userID = accounts.userID
+                            JOIN profiles ON profiles.userID = accounts.userID
                             WHERE videoID = ? 
                             ORDER BY commentID DESC 
                         """, (videoID,))
             comments = cursor.fetchall()
+            print(comments)
 
             num_of_comments = len(comments)
             cursor.execute("SELECT * FROM subscriptions WHERE subscribedToUserID = ?", (video[1],))
@@ -238,12 +251,19 @@ def watchPage():
                 isLikedVideo = isLikedVideo[0]
             timestamp = int(video[6])
             datePublished = time_ago(timestamp)
+
+            if username:
+                cursor.execute("SELECT profilePicture FROM profiles WHERE userID = ?", (userID,))
+                profilePicture = cursor.fetchone()
+            else:
+                profilePicture = ["profilepicturetest.png"]
+
             return render_template('watch.html', video=video, username=username, videos=videos,
-                                   creatorUsername=creatorUsername, comments=comments, userID=session.get("userID"),
+                                   creatorUsername=creatorUsername, comments=comments, userID=userID,
                                    creatorUserID=video[1], num_of_comments=num_of_comments,
                                    currentViewCount=currentViewCount, num_of_subscribers=num_of_subscribers,
                                    isSubscribedToChannel=isSubscribedToChannel, num_of_likes=num_of_likes,
-                                   isLikedVideo=isLikedVideo, datePublished=datePublished, time_ago=time_ago)
+                                   isLikedVideo=isLikedVideo, datePublished=datePublished, time_ago=time_ago, profilePicture=profilePicture[0])
         else:
             return "Video not found", 404
     else:
@@ -274,6 +294,7 @@ def searchForVideo():
     searchQuery = request.args.get("search_query")
     searchQueryForDB = f"%{searchQuery}%"
     username = session.get("username")
+    userID = session.get("userID")
 
     if searchQuery:
         conn = sqlite3.connect('cafeDatabase.db')
@@ -295,9 +316,15 @@ def searchForVideo():
 
         num_of_videos = len(videos)
 
+        if username:
+            cursor.execute("SELECT profilePicture FROM profiles WHERE userID = ?", (userID,))
+            profilePicture = cursor.fetchone()
+        else:
+            profilePicture = ["profilepicturetest.png"]
+
         conn.close()
         return render_template("search.html", searchQuery=searchQuery, username=username, videos=videos,
-                               num_of_videos=num_of_videos, userID=session.get("userID"), time_ago=time_ago)
+                               num_of_videos=num_of_videos, userID=userID, time_ago=time_ago, profilePicture=profilePicture[0])
     else:
         return redirect(url_for("indexPage"))
 
@@ -306,6 +333,7 @@ def searchForVideo():
 def getAccountProfile():
     userID = request.args.get('id')
     username = session.get("username")
+    userID_session = session.get("userID")
 
     if userID:
         conn = sqlite3.connect('cafeDatabase.db')
@@ -335,8 +363,14 @@ def getAccountProfile():
                             """, (userID,))
             videos = cursor.fetchall()  # List of tuples
 
+            if username:
+                cursor.execute("SELECT profilePicture FROM profiles WHERE userID = ?", (userID_session,))
+                profilePicture = cursor.fetchone()
+            else:
+                profilePicture = ["profilepicturetest.png"]
+
             return render_template("profile.html", username=username, profileDetails=profileDetails, videos=videos,
-                                   userID=session.get("userID"), time_ago=time_ago)
+                                   userID=userID_session, time_ago=time_ago, profilePicture=profilePicture[0])
         else:
             return redirect(url_for("indexPage"))
     else:
@@ -424,7 +458,13 @@ def editUserProfile():
     userID = session.get("userID")
 
     if username:
-        return render_template("edit_profile.html", username=username, userID=userID)
+        conn = sqlite3.connect('cafeDatabase.db')
+        conn.execute('PRAGMA foreign_keys = ON')
+        cursor = conn.cursor()
+
+        cursor.execute('SELECT profilePicture, profileBanner FROM profiles WHERE userID = ?', (userID,))
+        profileInfo = cursor.fetchone()
+        return render_template("edit_profile.html", username=username, userID=userID, profileInfo=profileInfo)
     else:
         return redirect(url_for('indexPage'))
 
@@ -442,16 +482,16 @@ def saveProfileSettings():
         message = ""
 
         if profileBanner.filename == '':
-            profileBanner = profileBannerDefault
+            print("No profile banner filename")
 
         if profilePicture.filename == '':
-            profilePicture.filename = profilePictureDefault
+            print("No profile picture filename")
 
         if 'profileBanner' not in request.files:
-            profileBanner.filename = profileBannerDefault
+            print("No profile banner filename")
 
         if 'profilePicture' not in request.files:
-            profilePicture.filename = profilePictureDefault
+            print("No profile picture filename")
 
         # cursor.execute("UPDATE videos SET views = ? WHERE videoID = ?", (viewCount, videoID))
 
@@ -461,7 +501,8 @@ def saveProfileSettings():
             profilePicturePath = os.path.join(cafe.config['UPLOAD_PROFILE_PICTURE_FOLDER'], profilePictureFilename)
             profilePicture.save(profilePicturePath)
 
-            successfulProfilePictureUpload, message = post.uploadProfilePictureToDatabase(profilePictureFilename, userID)
+            successfulProfilePictureUpload, message = post.uploadProfilePictureToDatabase(profilePictureFilename,
+                                                                                          userID)
             if successfulProfilePictureUpload:
                 success = True
 
@@ -481,6 +522,24 @@ def saveProfileSettings():
             return redirect(url_for('getAccountProfile'))
         else:
             return render_template('edit_profile.html', error=message)
+
+
+@cafe.errorhandler(404)
+def pageNotFound(error):
+    username = session.get('username')
+    userID = session.get('userID')
+
+    if username:
+        conn = sqlite3.connect('cafeDatabase.db')
+        conn.execute('PRAGMA foreign_keys = ON')
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT profilePicture FROM profiles WHERE userID = ?", (userID,))
+        profilePicture = cursor.fetchone()
+
+        return render_template('404.html', username=username, userID=userID, profilePicture=profilePicture[0]), 404
+    else:
+        return render_template('404.html'), 404
 
 
 cafe.run("127.0.0.1", 5000, debug=True)
