@@ -162,7 +162,9 @@
                     <a class="video-link" href="{{ url_for('watchPage', v=video[0]) }}">
                         <div class="cafe-video-post-container">
                             <div class="cafe-video-post-thumbnail">
-                                <img class="cafe-video-post-thumbnail" src="{{ url_for('static', filename='thumbnails/' + video[4]) }}">
+                                <div class="cafe-video-post-thumbnail-border">
+                                    <img class="cafe-video-post-thumbnail" src="{{ url_for('static', filename='thumbnails/' + video[4]) }}">
+                                </div>
                             </div>
                             <div class="cafe-align-video-post-details">
                                 <div class="cafe-video-post-profile-picture" style="border-color: {{ video[7] or '#C78A4B' }} !important;">

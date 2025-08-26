@@ -30,13 +30,34 @@
     </div>
     <div class="cafe-main-body">
         <div class="cafe-sidebar-left">
-            <div class="cafe-sidebar-left-title">
-                <h3>Sidebar Contents</h3>
-            </div>
             <div class="cafe-sidebar-left-contents">
-                <p>Edit your profile to make your profile look unique!</p>
-                <br>
-                <a href="{{ url_for('logout') }}">Logout</a>
+                <div class="cafe-sidebar-button-contents">
+                    <a href="{{ url_for('indexPage') }}">Home</a>
+                    <a href="{{ url_for('explorePage') }}">Explore</a>
+                    {% if username %}
+                        <a href="{{ url_for('accountSubscriptions') }}">Subscriptions</a>
+                    {% endif %}
+                    <a href="{{ url_for('indexPage') }}">Lattes</a>
+                    <p class="cafe-account-settings-sidebar-title cafe-account-settings-sidebar-title-layout">Account Settings</p>
+                    <a href="{{ url_for('editUserProfile') }}">Profile</a>
+                    <a href="{{ url_for('logout') }}">Logout</a>
+                </div>
+                {% if username %}
+                    <div class="cafe-sidebar-left-title">
+                        <br><br>
+                        <p>Subscriptions</p>
+                    </div>
+                    <div class="cafe-sidebar-subscriptions-contents">
+                        {% for subscription in subscriptionsInfo %}
+                            <a class="account-link" href="{{ url_for('getAccountProfile', id=subscription[2]) }}">
+                                <div class="cafe-sidebar-subscriptions-channel">
+                                    <img class="cafe-sidebar-subscriptions-profile-picture" style="border-color: {{ subscription[1] or '#C78A4B' }} !important;" src="{{ url_for('static', filename='profile/pfp/' + (subscription[0] if subscription[0] else 'profilepicturetest.png')) }}">
+                                    <p class="cafe-sidebar-subscriptions-username">{{ subscription[3] }}</p>
+                                </div>
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% endif %}
             </div>
         </div>
         <div class="cafe-video-list-body">

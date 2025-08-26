@@ -33,14 +33,30 @@
     </div>
     <div class="cafe-main-body">
         <div class="cafe-sidebar-left">
-            <div class="cafe-sidebar-left-title">
-                <h3>Sidebar Contents</h3>
-            </div>
             <div class="cafe-sidebar-left-contents">
+                <div class="cafe-sidebar-button-contents">
+                    <a href="{{ url_for('indexPage') }}">Home</a>
+                    <a href="{{ url_for('explorePage') }}">Explore</a>
+                    {% if username %}
+                        <a href="{{ url_for('accountSubscriptions') }}">Subscriptions</a>
+                    {% endif %}
+                    <a href="{{ url_for('indexPage') }}">Lattes</a>
+                </div>
                 {% if username %}
-                    <a href="{{ url_for('upload') }}">Upload</a>
-                {% else %}
-                    <p>Login to upload videos!</p>
+                    <div class="cafe-sidebar-left-title">
+                        <br><br>
+                        <p>Subscriptions</p>
+                    </div>
+                    <div class="cafe-sidebar-subscriptions-contents">
+                        {% for subscription in subscriptionsInfo %}
+                            <a class="account-link" href="{{ url_for('getAccountProfile', id=subscription[2]) }}">
+                                <div class="cafe-sidebar-subscriptions-channel">
+                                    <img class="cafe-sidebar-subscriptions-profile-picture" style="border-color: {{ subscription[1] or '#C78A4B' }} !important;" src="{{ url_for('static', filename='profile/pfp/' + (subscription[0] if subscription[0] else 'profilepicturetest.png')) }}">
+                                    <p class="cafe-sidebar-subscriptions-username">{{ subscription[3] }}</p>
+                                </div>
+                            </a>
+                        {% endfor %}
+                    </div>
                 {% endif %}
             </div>
         </div>
@@ -53,7 +69,9 @@
                     <a class="video-link" href="{{ url_for('watchPage', v=video[0]) }}">
                         <div class="cafe-video-post-container cafe-video-post-container-margin-bottom">
                             <div class="cafe-video-post-thumbnail">
-                                <img class="cafe-video-post-thumbnail" src="{{ url_for('static', filename='thumbnails/' + video[4]) }}">
+                                <div class="cafe-video-post-thumbnail-border">
+                                    <img class="cafe-video-post-thumbnail" src="{{ url_for('static', filename='thumbnails/' + video[4]) }}">
+                                </div>
                             </div>
                             <div class="cafe-align-video-post-details">
                                 <div class="cafe-video-post-profile-picture" style="border-color: {{ video[7] or '#C78A4B' }} !important;">

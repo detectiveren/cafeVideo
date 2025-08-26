@@ -26,12 +26,21 @@ def time_ago(timestamp):
         result = f"{int(days)} day{'s' if days > 1 else ''} ago"
     elif seconds < 2419200:
         weeks = seconds // 604800
-        result = f"{int(weeks)} week{'s' if weeks > 1 else ''}"
+        result = f"{int(weeks)} week{'s' if weeks > 1 else ''} ago"
     elif seconds < 29030400:
         months = seconds // 2419200
-        result = f"{int(months)} month{'s' if months > 1 else ''}"
+        result = f"{int(months)} month{'s' if months > 1 else ''} ago"
     else:
         years = seconds // 29030400
-        result = f"{int(years)} year{'s' if years > 1 else ''}"
+        result = f"{int(years)} year{'s' if years > 1 else ''} ago"
 
     return result
+
+
+def getVideoDatetime(timestamp):
+    if not isinstance(timestamp, int):
+        timestamp = int(timestamp)
+    current_datetime = datetime.fromtimestamp(timestamp)
+    videoUploadDate = str(current_datetime.strftime("%B %d, %Y"))
+
+    return videoUploadDate

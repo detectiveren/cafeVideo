@@ -1,6 +1,6 @@
-from flask import Flask, render_template, request, url_for, session, jsonify, redirect, flash
+from flask import Flask, render_template, request, url_for, session, jsonify, redirect, flash, abort
 import sqlite3, createAccount, post, os
-from time_converter import time_ago
+from time_converter import time_ago, getVideoDatetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 
@@ -60,6 +60,38 @@ def indexPage():
                                 JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
                                 WHERE userID = ?""", (userID,))
         profilePicture = cursor.fetchone()
+        cursor.execute("""
+                          SELECT feature_access.featureID, feature_gating.featureName
+                          FROM feature_access
+                          JOIN feature_gating ON feature_access.featureID = feature_gating.featureID
+                          JOIN accounts ON feature_access.userID = accounts.userID
+                          WHERE accounts.userID = ?  
+                        """, (userID,))
+        featureAccess = cursor.fetchall()
+        print(featureAccess[0][0])
+        cursor.execute("""
+                                SELECT profilePicture, profileColorSets.profilePictureBorderColor, accounts.userID, accounts.username
+                                FROM profiles
+                                JOIN accounts ON profiles.userID = accounts.userID
+                                JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
+                                JOIN subscriptions ON subscriptions.subscribedToUserID = accounts.userID
+                                WHERE subscriptions.userID = ?""", (userID,))
+        subscriptionsInfo = cursor.fetchall()
+        # Fetch the latest videos for the subscriptions feed
+        cursor.execute("""
+                            SELECT videos.videoID, accounts.username, videos.videoTitle, videos.views, videos.videoThumbnail, videos.datetime, profiles.profilePicture, profileColorSets.profilePictureBorderColor
+                            FROM videos
+                            JOIN accounts ON videos.userID = accounts.userID
+                            JOIN profiles ON profiles.userID = accounts.userID
+                            JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
+                            JOIN subscriptions ON subscriptions.subscribedToUserID = accounts.userID
+                            WHERE subscriptions.userID = ?
+                            ORDER BY videoID DESC  -- Shows newest first
+                            LIMIT 12
+                        """, (userID,))
+        subscription_videos = cursor.fetchall()
+        return render_template('index.html', username=username, videos=videos, userID=userID,
+                               time_ago=time_ago, profilePicture=profilePicture, subscriptionsInfo=subscriptionsInfo, subscription_videos=subscription_videos, featureAccess=featureAccess)
     else:
         profilePicture = ["profilepicturetest.png"]
     conn.close()
@@ -138,8 +170,17 @@ def upload():
                                 JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
                                 WHERE userID = ?""", (userID,))
         profilePicture = cursor.fetchone()
+        cursor.execute("""
+                                        SELECT profilePicture, profileColorSets.profilePictureBorderColor, accounts.userID, accounts.username
+                                        FROM profiles
+                                        JOIN accounts ON profiles.userID = accounts.userID
+                                        JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
+                                        JOIN subscriptions ON subscriptions.subscribedToUserID = accounts.userID
+                                        WHERE subscriptions.userID = ?""", (userID,))
+        subscriptionsInfo = cursor.fetchall()
 
-        return render_template("upload.html", username=username, userID=session.get("userID"), profilePicture=profilePicture)
+        return render_template("upload.html", username=username, userID=session.get("userID"),
+                               profilePicture=profilePicture, subscriptionsInfo=subscriptionsInfo)
     else:
         return redirect(url_for('loginPage'))
 
@@ -169,9 +210,12 @@ def uploadVideo():
             filepath = os.path.join(cafe.config['UPLOAD_FOLDER'], filename)
             videoFile.save(filepath)
             # Upload the thumbnail file to its destination
-            thumbnailFilename = secure_filename(thumbnail.filename)
-            thumbnailPath = os.path.join(cafe.config['UPLOAD_THUMBNAILS_FOLDER'], thumbnailFilename)
-            thumbnail.save(thumbnailPath)
+            if thumbnail != defaultThumbnail:
+                thumbnailFilename = secure_filename(thumbnail.filename)
+                thumbnailPath = os.path.join(cafe.config['UPLOAD_THUMBNAILS_FOLDER'], thumbnailFilename)
+                thumbnail.save(thumbnailPath)
+            else:
+                thumbnailFilename = secure_filename(thumbnail.filename)
             userID = session.get('userID')
             title = request.form['title']
             description = request.form['description']
@@ -262,7 +306,7 @@ def watchPage():
             if isLikedVideo:
                 isLikedVideo = isLikedVideo[0]
             timestamp = int(video[6])
-            datePublished = time_ago(timestamp)
+            datePublished = getVideoDatetime(timestamp)
 
             if username:
                 cursor.execute("""
@@ -279,7 +323,8 @@ def watchPage():
                                    creatorUserID=video[1], num_of_comments=num_of_comments,
                                    currentViewCount=currentViewCount, num_of_subscribers=num_of_subscribers,
                                    isSubscribedToChannel=isSubscribedToChannel, num_of_likes=num_of_likes,
-                                   isLikedVideo=isLikedVideo, datePublished=datePublished, time_ago=time_ago, profilePicture=profilePicture)
+                                   isLikedVideo=isLikedVideo, datePublished=datePublished, time_ago=time_ago,
+                                   profilePicture=profilePicture)
         else:
             return "Video not found", 404
     else:
@@ -317,7 +362,7 @@ def searchForVideo():
         conn.execute('PRAGMA foreign_keys = ON')
         cursor = conn.cursor()
 
-        # Fetch the latest videos for the new videos feed
+        # Fetch the videos with the most views for the search results
         cursor.execute("""
                     SELECT videos.videoID, accounts.username, videos.videoTitle, videos.views, videos.videoThumbnail, videos.datetime, profiles.profilePicture, profileColorSets.profilePictureBorderColor
                     FROM videos
@@ -325,7 +370,7 @@ def searchForVideo():
                     JOIN profiles ON profiles.userID = accounts.userID
                     JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
                     WHERE videos.videoTitle LIKE ?
-                    ORDER BY videoID DESC  -- Shows newest first
+                    ORDER BY views DESC  -- Shows newest first
                 """, (searchQueryForDB,))
         videos = cursor.fetchall()  # List of tuples
 
@@ -340,17 +385,30 @@ def searchForVideo():
                                     JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
                                     WHERE userID = ?""", (userID,))
             profilePicture = cursor.fetchone()
+            cursor.execute("""
+                                                    SELECT profilePicture, profileColorSets.profilePictureBorderColor, accounts.userID, accounts.username
+                                                    FROM profiles
+                                                    JOIN accounts ON profiles.userID = accounts.userID
+                                                    JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
+                                                    JOIN subscriptions ON subscriptions.subscribedToUserID = accounts.userID
+                                                    WHERE subscriptions.userID = ?""", (userID,))
+            subscriptionsInfo = cursor.fetchall()
+            conn.close()
+            return render_template("search.html", searchQuery=searchQuery, username=username, videos=videos,
+                                   num_of_videos=num_of_videos, userID=userID, time_ago=time_ago,
+                                   profilePicture=profilePicture, subscriptionsInfo=subscriptionsInfo)
         else:
             profilePicture = ["profilepicturetest.png"]
+            conn.close()
+            return render_template("search.html", searchQuery=searchQuery, username=username, videos=videos,
+                                   num_of_videos=num_of_videos, userID=userID, time_ago=time_ago,
+                                   profilePicture=profilePicture)
 
-        conn.close()
-        return render_template("search.html", searchQuery=searchQuery, username=username, videos=videos,
-                               num_of_videos=num_of_videos, userID=userID, time_ago=time_ago, profilePicture=profilePicture)
     else:
         return redirect(url_for("indexPage"))
 
 
-@cafe.route('/profile')
+@cafe.route('/channel')
 def getAccountProfile():
     userID = request.args.get('id')
     username = session.get("username")
@@ -385,6 +443,14 @@ def getAccountProfile():
                             """, (userID,))
             videos = cursor.fetchall()  # List of tuples
 
+            cursor.execute("""
+                            SELECT * 
+                            FROM subscriptions
+                            WHERE subscribedToUserID = ?
+                            """, (userID,))
+            subscribers = cursor.fetchall()
+            num_of_subscribers = len(subscribers)
+
             if username:
                 cursor.execute("""
                                         SELECT profilePicture, profileColorSets.profilePictureBorderColor
@@ -392,11 +458,31 @@ def getAccountProfile():
                                         JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
                                         WHERE userID = ?""", (userID_session,))
                 profilePicture = cursor.fetchone()
+                cursor.execute("""
+                                                                    SELECT profilePicture, profileColorSets.profilePictureBorderColor, accounts.userID, accounts.username
+                                                                    FROM profiles
+                                                                    JOIN accounts ON profiles.userID = accounts.userID
+                                                                    JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
+                                                                    JOIN subscriptions ON subscriptions.subscribedToUserID = accounts.userID
+                                                                    WHERE subscriptions.userID = ?""",
+                               (userID_session,))
+                subscriptionsInfo = cursor.fetchall()
+
+                cursor.execute("SELECT * FROM subscriptions WHERE userID = ? AND subscribedToUserID = ?",
+                               (userID_session, userID))
+                isSubscribedToChannel = cursor.fetchone()
+                if isSubscribedToChannel:
+                    isSubscribedToChannel = isSubscribedToChannel[0]
+                return render_template("profile.html", username=username, profileDetails=profileDetails, videos=videos,
+                                       userID=userID_session, time_ago=time_ago, profilePicture=profilePicture,
+                                       num_of_subscribers=num_of_subscribers, subscriptionsInfo=subscriptionsInfo,
+                                       channelID=userID, isSubscribedToChannel=isSubscribedToChannel)
+
             else:
                 profilePicture = ["profilepicturetest.png"]
-
-            return render_template("profile.html", username=username, profileDetails=profileDetails, videos=videos,
-                                   userID=userID_session, time_ago=time_ago, profilePicture=profilePicture)
+                return render_template("profile.html", username=username, profileDetails=profileDetails, videos=videos,
+                                       userID=userID_session, time_ago=time_ago, profilePicture=profilePicture,
+                                       num_of_subscribers=num_of_subscribers, channelID=userID)
         else:
             return redirect(url_for("indexPage"))
     else:
@@ -410,6 +496,9 @@ def subscribeToUser():
 
     creatorUserID = request.args.get('creatorID')
     subscriberUserID = session["userID"]
+
+    if creatorUserID is None:
+        return redirect(url_for('indexPage'))
 
     if int(creatorUserID) != int(subscriberUserID):
         conn = sqlite3.connect('cafeDatabase.db')
@@ -498,8 +587,97 @@ def editUserProfile():
         cursor.execute('SELECT profileSetID, profileSetName FROM profileColorSets')
         profileColorSets = cursor.fetchall()
 
+        cursor.execute("""
+                                SELECT profilePicture, profileColorSets.profilePictureBorderColor, accounts.userID, accounts.username
+                                FROM profiles
+                                JOIN accounts ON profiles.userID = accounts.userID
+                                JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
+                                JOIN subscriptions ON subscriptions.subscribedToUserID = accounts.userID
+                                WHERE subscriptions.userID = ?""",
+                       (userID,))
+        subscriptionsInfo = cursor.fetchall()
+
+        # Fetch the amount of features the user has access to
+        cursor.execute("""
+                        SELECT * 
+                        FROM feature_access
+                        WHERE userID = ?
+                        """, (userID,))
+        userAccessList = cursor.fetchall()
+
+        if userAccessList:
+            userAccessDisplay = []
+            for userAccess in userAccessList:
+                cursor.execute("""
+                                    SELECT *
+                                    FROM feature_gating
+                                    WHERE featureID = ?
+                                    """, (userAccess[0],))
+                feature = cursor.fetchone()
+                userAccessDisplay.append(feature)
+        else:
+            userAccessDisplay = False
+
         return render_template("edit_profile.html", username=username, userID=userID, profileInfo=profileInfo,
-                               profileColorSets=profileColorSets)
+                               profileColorSets=profileColorSets, subscriptionsInfo=subscriptionsInfo, userAccessDisplay=userAccessDisplay)
+    else:
+        return redirect(url_for('indexPage'))
+
+
+@cafe.route('/accountSettings')
+def getAccountSettings():
+    username = session.get("username")
+    userID = session.get("userID")
+
+    if username:
+        conn = sqlite3.connect('cafeDatabase.db')
+        conn.execute('PRAGMA foreign_keys = ON')
+        cursor = conn.cursor()
+
+        cursor.execute("""
+                                    SELECT profilePicture, profileBanner, profileColorSets.profilePictureBorderColor 
+                                    FROM profiles 
+                                    JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
+                                    WHERE userID = ?""", (userID,))
+        profileInfo = cursor.fetchone()
+
+        cursor.execute('SELECT profileSetID, profileSetName FROM profileColorSets')
+        profileColorSets = cursor.fetchall()
+
+        cursor.execute("""
+                                    SELECT profilePicture, profileColorSets.profilePictureBorderColor, accounts.userID, accounts.username
+                                    FROM profiles
+                                    JOIN accounts ON profiles.userID = accounts.userID
+                                    JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
+                                    JOIN subscriptions ON subscriptions.subscribedToUserID = accounts.userID
+                                    WHERE subscriptions.userID = ?""",
+                       (userID,))
+        subscriptionsInfo = cursor.fetchall()
+
+        # Fetch the amount of features the user has access to
+        cursor.execute("""
+                            SELECT * 
+                            FROM feature_access
+                            WHERE userID = ?
+                            """, (userID,))
+        userAccessList = cursor.fetchall()
+
+        if userAccessList:
+            userAccessDisplay = []
+            for userAccess in userAccessList:
+                cursor.execute("""
+                                        SELECT *
+                                        FROM feature_gating
+                                        WHERE featureID = ?
+                                        """, (userAccess[0],))
+                feature = cursor.fetchone()
+                userAccessDisplay.append(feature)
+        else:
+            userAccessDisplay = False
+
+        return render_template("account_settings.html", username=username, userID=userID, profileInfo=profileInfo,
+                               profileColorSets=profileColorSets, subscriptionsInfo=subscriptionsInfo,
+                               userAccessDisplay=userAccessDisplay)
     else:
         return redirect(url_for('indexPage'))
 
@@ -588,6 +766,154 @@ def pageNotFound(error):
         return render_template('404.html', username=username, userID=userID, profilePicture=profilePicture), 404
     else:
         return render_template('404.html'), 404
+
+
+@cafe.route('/subscriptions')
+def accountSubscriptions():
+    username = session.get("username")
+    userID = session.get("userID")
+
+    if username:
+        conn = sqlite3.connect('cafeDatabase.db')
+        conn.execute('PRAGMA foreign_keys = ON')
+        cursor = conn.cursor()
+
+        # Fetch the latest videos for the subscriptions feed
+        cursor.execute("""
+                    SELECT videos.videoID, accounts.username, videos.videoTitle, videos.views, videos.videoThumbnail, videos.datetime, profiles.profilePicture, profileColorSets.profilePictureBorderColor
+                    FROM videos
+                    JOIN accounts ON videos.userID = accounts.userID
+                    JOIN profiles ON profiles.userID = accounts.userID
+                    JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
+                    JOIN subscriptions ON subscriptions.subscribedToUserID = accounts.userID
+                    WHERE subscriptions.userID = ?
+                    ORDER BY videoID DESC  -- Shows newest first
+                """, (userID,))
+        videos = cursor.fetchall()  # List of tuples
+
+        cursor.execute("""
+                                SELECT profilePicture, profileColorSets.profilePictureBorderColor
+                                FROM profiles 
+                                JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
+                                WHERE userID = ?""", (userID,))
+        profilePicture = cursor.fetchone()
+
+        cursor.execute("""
+                                SELECT profilePicture, profileColorSets.profilePictureBorderColor, accounts.userID, accounts.username
+                                FROM profiles
+                                JOIN accounts ON profiles.userID = accounts.userID
+                                JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
+                                JOIN subscriptions ON subscriptions.subscribedToUserID = accounts.userID
+                                WHERE subscriptions.userID = ?""",
+                       (userID,))
+        subscriptionsInfo = cursor.fetchall()
+
+        conn.close()
+        return render_template('subscriptions.html', username=username, videos=videos, userID=userID,
+                               time_ago=time_ago, profilePicture=profilePicture, subscriptionsInfo=subscriptionsInfo)
+    else:
+        return redirect(url_for('indexPage'))
+
+
+@cafe.route('/explore')
+def explorePage():
+    conn = sqlite3.connect('cafeDatabase.db')
+    conn.execute('PRAGMA foreign_keys = ON')
+    cursor = conn.cursor()
+    username = session.get("username")
+    userID = session.get("userID")
+
+    # Fetch the latest videos for the new videos feed
+    cursor.execute("""
+                SELECT videos.videoID, accounts.username, videos.videoTitle, videos.views, videos.videoThumbnail, videos.datetime, profiles.profilePicture, profileColorSets.profilePictureBorderColor
+                FROM videos
+                JOIN accounts ON videos.userID = accounts.userID
+                JOIN profiles ON profiles.userID = accounts.userID
+                JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
+                ORDER BY videoID DESC  -- Shows newest first
+            """)
+    videos = cursor.fetchall()  # List of tuples
+
+    if username:
+        cursor.execute("""
+                                    SELECT profilePicture, profileColorSets.profilePictureBorderColor
+                                    FROM profiles 
+                                    JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
+                                    WHERE userID = ?""", (userID,))
+        profilePicture = cursor.fetchone()
+        cursor.execute("""
+                                    SELECT profilePicture, profileColorSets.profilePictureBorderColor, accounts.userID, accounts.username
+                                    FROM profiles
+                                    JOIN accounts ON profiles.userID = accounts.userID
+                                    JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
+                                    JOIN subscriptions ON subscriptions.subscribedToUserID = accounts.userID
+                                    WHERE subscriptions.userID = ?""", (userID,))
+        subscriptionsInfo = cursor.fetchall()
+        print(subscriptionsInfo)
+        return render_template('explore.html', username=username, videos=videos, userID=userID,
+                               time_ago=time_ago, profilePicture=profilePicture, subscriptionsInfo=subscriptionsInfo)
+    else:
+        profilePicture = ["profilepicturetest.png"]
+    conn.close()
+    return render_template('explore.html', username=username, videos=videos, userID=userID,
+                           time_ago=time_ago, profilePicture=profilePicture)
+
+
+@cafe.route('/lattes')
+def lattePage():
+    username = session.get("username")
+    userID = session.get("userID")
+    conn = sqlite3.connect('cafeDatabase.db')
+    conn.execute('PRAGMA foreign_keys = ON')
+    cursor = conn.cursor()
+
+    # Fetch the latest videos for the new videos feed
+    cursor.execute("""
+                    SELECT videos.videoID, accounts.username, videos.videoTitle, videos.views, videos.videoThumbnail, videos.datetime, profiles.profilePicture, profileColorSets.profilePictureBorderColor
+                    FROM videos
+                    JOIN accounts ON videos.userID = accounts.userID
+                    JOIN profiles ON profiles.userID = accounts.userID
+                    JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
+                    ORDER BY videoID DESC  -- Shows newest first
+                    """)
+    lattes = cursor.fetchall()  # List of tuples
+
+    cursor.execute("""
+                            SELECT profilePicture, profileColorSets.profilePictureBorderColor
+                            FROM profiles 
+                            JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
+                            WHERE userID = ?""", (userID,))
+    profilePicture = cursor.fetchone()
+    cursor.execute("""
+                            SELECT profilePicture, profileColorSets.profilePictureBorderColor, accounts.userID, accounts.username
+                            FROM profiles
+                            JOIN accounts ON profiles.userID = accounts.userID
+                            JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
+                            JOIN subscriptions ON subscriptions.subscribedToUserID = accounts.userID
+                            WHERE subscriptions.userID = ?""", (userID,))
+    subscriptionsInfo = cursor.fetchall()
+
+    if username:
+
+        # Check if user has access
+        cursor.execute("""
+                        SELECT userID 
+                        FROM feature_access 
+                        WHERE featureID = 1
+                        """)
+        usersList = cursor.fetchall()
+
+        print(usersList)
+
+        for user in usersList:
+            if user[0] == userID:
+                return render_template('lattes.html', username=username, videos=lattes, userID=userID,
+                                       time_ago=time_ago, profilePicture=profilePicture,
+                                       subscriptionsInfo=subscriptionsInfo)
+            else:
+                return abort(404)
+    else:
+        return abort(404)
 
 
 cafe.run("127.0.0.1", 5000, debug=True)

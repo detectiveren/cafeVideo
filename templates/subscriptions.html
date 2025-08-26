@@ -2,17 +2,21 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-    <title>cafeVideo - Upload</title>
+    <title>cafeVideo - Subscriptions</title>
 </head>
 <body>
     <div class="cafe-header-navbar">
         <div class="cafe-header-navbar-container">
             <!-- <div class="cafe-header-navbar-item"><button>Sidebar Test</button></div> -->
             <div class="cafe-header-navbar-item"><a class="cafe-navbar-title" href="{{ url_for('indexPage') }}"><h2>cafeVideo</h2></a></div>
+
             <form action="/searchRequest" method="POST" class="cafe-header-navbar-item cafe-search-layout">
                 <input type="text" name="search" placeholder="Search for a video" class="cafe-search-box" required>
             </form>
+
+            <!-- If the user is logged in, show username and logout button -->
             <div class="cafe-header-navbar-item-right cafe-header-navbar-item">
                 {% if username %}
                     <a class="cafe-navbar-upload-button" href="{{ url_for('upload') }}">
@@ -58,26 +62,40 @@
             </div>
         </div>
         <div class="cafe-video-list-body">
-            <div class="cafe-upload-body">
-                <div class="cafe-login-title">
-                    <h1>Upload to cafeVideo!</h1>
+            {% if username %}
+                <div class="cafe-video-list-contents-subscriptions">
+                    <p class="cafe-video-list-title">Subscriptions Feed</p>
+                    <div class="cafe-video-posts-row">
+                        {% for video in videos %}
+                        <a class="video-link" href="{{ url_for('watchPage', v=video[0]) }}">
+                            <div class="cafe-video-post-container cafe-video-post-container-margin-bottom">
+                                <div class="cafe-video-post-thumbnail">
+                                    <div class="cafe-video-post-thumbnail-border">
+                                        <img class="cafe-video-post-thumbnail" src="{{ url_for('static', filename='thumbnails/' + (video[4] if video[4] else 'videotemplate.png')) }}">
+                                    </div>
+                                </div>
+                                <div class="cafe-align-video-post-details">
+                                    <div class="cafe-video-post-profile-picture" style="border-color: {{ video[7] or '#C78A4B' }} !important;">
+                                        <img class="cafe-video-post-profile-picture-image" src="{{ url_for('static', filename='profile/pfp/' + (video[6] if video[6] else 'profilepicturetest.png')) }}">
+                                    </div>
+                                    <div class="cafe-video-post-details">
+                                        <div class="cafe-video-post-title">
+                                            <p>{{ video[2] }}</p>  <!-- Video Title -->
+                                        </div>
+                                        <div class="cafe-video-post-channel">
+                                            <p>{{ video[1] }}</p>  <!-- Uploader Username -->
+                                        </div>
+                                        <div class="cafe-video-post-views">
+                                            <p>{{ video[3] }} views · {{ time_ago(video[5]) }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    </div>
                 </div>
-                <img class="cafe-video-post-thumbnail cafe-video-post-thumbnail-border" src="{{ url_for('static', filename='thumbnails/videotemplate.png') }}">
-                <p>This is the placeholder for the video thumbnail if you don't upload one</p>
-                <form action="/uploadVideo" method="POST" class="cafe-login-details" enctype="multipart/form-data">
-                    <label for="video" class="cafe-upload-button otherParagraphs">Upload a video</label>
-                    <input type="file" id="video" name="video" accept="video/*" required hidden><br><br>
-                    <label for="thumbnail" class="cafe-upload-button otherParagraphs">Upload a thumbnail</label>
-                    <input type="file" id="thumbnail" name="thumbnail" accept="image/*" hidden><br><br>
-                    <input type="text" name="title" placeholder="Enter a title" class="cafe-comment-box" required><br><br>
-                    <input type="text" name="description" placeholder="Enter a description" class="cafe-comment-box" required><br><br>
-                    <input type="text" name="videoTags" placeholder="Enter some video tags, separate using commas" class="cafe-comment-box"><br><br>
-                    <button type="submit" class="cafe-comment-button">Upload</button>
-                </form>
-                {% if error %}
-                    <p style="color: red">{{error}}</p>
-                {% endif %}
-            </div>
+            {% endif %}
         </div>
     </div>
     <!-- Rename to cafeChannels -->

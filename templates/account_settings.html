@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-    <title>cafeVideo - Upload</title>
+    <title>cafeVideo - Account Settings</title>
 </head>
 <body>
     <div class="cafe-header-navbar">
@@ -19,7 +19,7 @@
                         <img class="cafe-navbar-upload-button-img" src="{{ url_for('static', filename='images/upload.png') }}">
                     </a>
                     <a class="cafe-profile-link" href="{{ url_for('getAccountProfile', id=userID) }}">
-                        <img class="cafe-navbar-pfp" style="border-color: {{ profilePicture[1] or '#C78A4B' }} !important;" src="{{ url_for('static', filename='profile/pfp/' + (profilePicture[0] if profilePicture[0] else 'profilepicturetest.png')) }}">
+                        <img class="cafe-navbar-pfp" style="border-color: {{ profileInfo[2] or '#C78A4B' }} !important;" src="{{ url_for('static', filename='profile/pfp/' + (profileInfo[0] if profileInfo[0] else 'profilepicturetest.png')) }}">
                     </a>
                 {% else %}
                     <!-- If user is not logged in -->
@@ -38,6 +38,9 @@
                         <a href="{{ url_for('accountSubscriptions') }}">Subscriptions</a>
                     {% endif %}
                     <a href="{{ url_for('indexPage') }}">Lattes</a>
+                    <p class="cafe-account-settings-sidebar-title cafe-account-settings-sidebar-title-layout">Account Settings</p>
+                    <a href="{{ url_for('editUserProfile') }}">Profile</a>
+                    <a href="{{ url_for('logout') }}">Logout</a>
                 </div>
                 {% if username %}
                     <div class="cafe-sidebar-left-title">
@@ -58,21 +61,29 @@
             </div>
         </div>
         <div class="cafe-video-list-body">
-            <div class="cafe-upload-body">
-                <div class="cafe-login-title">
-                    <h1>Upload to cafeVideo!</h1>
+            <div class="cafe-account-settings-body">
+                <div class="cafe-account-settings-user-details">
+                    <img class="cafe-profile-picture-showcase-image cafe-box-shadow-other" src="{{ url_for('static', filename='profile/pfp/' + (profileInfo[0] if profileInfo[0] else 'profilepicturetest.png')) }}">
+                    <h1>{{ username }} - Account Settings</h1>
                 </div>
-                <img class="cafe-video-post-thumbnail cafe-video-post-thumbnail-border" src="{{ url_for('static', filename='thumbnails/videotemplate.png') }}">
-                <p>This is the placeholder for the video thumbnail if you don't upload one</p>
-                <form action="/uploadVideo" method="POST" class="cafe-login-details" enctype="multipart/form-data">
-                    <label for="video" class="cafe-upload-button otherParagraphs">Upload a video</label>
-                    <input type="file" id="video" name="video" accept="video/*" required hidden><br><br>
-                    <label for="thumbnail" class="cafe-upload-button otherParagraphs">Upload a thumbnail</label>
-                    <input type="file" id="thumbnail" name="thumbnail" accept="image/*" hidden><br><br>
-                    <input type="text" name="title" placeholder="Enter a title" class="cafe-comment-box" required><br><br>
-                    <input type="text" name="description" placeholder="Enter a description" class="cafe-comment-box" required><br><br>
-                    <input type="text" name="videoTags" placeholder="Enter some video tags, separate using commas" class="cafe-comment-box"><br><br>
-                    <button type="submit" class="cafe-comment-button">Upload</button>
+                <div class="cafe-account-settings-user-content">
+                    <h1 class="cafe-center-titles" style="color: red;">WORK IN PROGRESS</h1>
+                    {% if userAccessDisplay %}
+                    <div class="cafe-feature-gating">
+                        <p class="cafe-account-settings-title-underline">Feature Gating</p>
+                        {% for userAccess in userAccessDisplay %}
+                        <div class="cafe-feature-gating-content">
+                            <div class="cafe-feature-gating-content-text">
+                                <h3>{{ userAccess[1] }}</h3>
+                                <p>{{ userAccess[2] }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <form action="/" method="POST" class="cafe-login-details" enctype="multipart/form-data">
+
                 </form>
                 {% if error %}
                     <p style="color: red">{{error}}</p>
