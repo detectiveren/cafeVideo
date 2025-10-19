@@ -414,13 +414,15 @@ def searchForVideo():
 
         if username:
             cursor.execute("""
-                                    SELECT profilePicture, profileColorSets.profilePictureBorderColor
+                                    SELECT profilePicture, profileColorSets.profilePictureBorderColor, 
+                                    channelURLEnabled, channelURL
                                     FROM profiles 
                                     JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
                                     WHERE userID = ?""", (userID,))
             profilePicture = cursor.fetchone()
             cursor.execute("""
-                                                    SELECT profilePicture, profileColorSets.profilePictureBorderColor, accounts.userID, accounts.username
+                                                    SELECT profilePicture, profileColorSets.profilePictureBorderColor, 
+                                                    accounts.userID, accounts.username, channelURLEnabled, channelURL
                                                     FROM profiles
                                                     JOIN accounts ON profiles.userID = accounts.userID
                                                     JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
@@ -487,13 +489,17 @@ def getAccountProfile():
 
             if username:
                 cursor.execute("""
-                                        SELECT profilePicture, profileColorSets.profilePictureBorderColor
+                                        SELECT profilePicture, profileColorSets.profilePictureBorderColor, 
+                                        channelURLEnabled, channelURL
                                         FROM profiles 
                                         JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
                                         WHERE userID = ?""", (userID_session,))
                 profilePicture = cursor.fetchone()
                 cursor.execute("""
-                                                                    SELECT profilePicture, profileColorSets.profilePictureBorderColor, accounts.userID, accounts.username
+                                                                    SELECT profilePicture, 
+                                                                    profileColorSets.profilePictureBorderColor, 
+                                                                    accounts.userID, accounts.username, 
+                                                                    channelURLEnabled, channelURL
                                                                     FROM profiles
                                                                     JOIN accounts ON profiles.userID = accounts.userID
                                                                     JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
@@ -640,7 +646,8 @@ def editUserProfile():
         cursor = conn.cursor()
 
         cursor.execute("""
-                                SELECT profilePicture, profileBanner, profileColorSets.profilePictureBorderColor 
+                                SELECT profilePicture, profileBanner, profileColorSets.profilePictureBorderColor, 
+                                channelURLEnabled, channelURL 
                                 FROM profiles 
                                 JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
                                 WHERE userID = ?""", (userID,))
@@ -652,7 +659,8 @@ def editUserProfile():
         profileColorSets = cursor.fetchall()
 
         cursor.execute("""
-                                SELECT profilePicture, profileColorSets.profilePictureBorderColor, accounts.userID, accounts.username
+                                SELECT profilePicture, profileColorSets.profilePictureBorderColor, accounts.userID, 
+                                accounts.username, channelURLEnabled, channelURL
                                 FROM profiles
                                 JOIN accounts ON profiles.userID = accounts.userID
                                 JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
@@ -700,7 +708,8 @@ def getAccountSettings():
         cursor = conn.cursor()
 
         cursor.execute("""
-                                    SELECT profilePicture, profileBanner, channelURL, profileColorSets.profilePictureBorderColor 
+                                    SELECT profilePicture, profileBanner, channelURL, 
+                                    profileColorSets.profilePictureBorderColor, channelURLEnabled
                                     FROM profiles 
                                     JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
                                     WHERE userID = ?""", (userID,))
@@ -710,7 +719,8 @@ def getAccountSettings():
         profileColorSets = cursor.fetchall()
 
         cursor.execute("""
-                                    SELECT profilePicture, profileColorSets.profilePictureBorderColor, accounts.userID, accounts.username
+                                    SELECT profilePicture, profileColorSets.profilePictureBorderColor, accounts.userID, 
+                                    accounts.username, channelURLEnabled, channelURL
                                     FROM profiles
                                     JOIN accounts ON profiles.userID = accounts.userID
                                     JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
@@ -842,7 +852,8 @@ def pageNotFound(error):
         cursor = conn.cursor()
 
         cursor.execute("""
-                                SELECT profilePicture, profileColorSets.profilePictureBorderColor
+                                SELECT profilePicture, profileColorSets.profilePictureBorderColor, channelURLEnabled, 
+                                channelURL
                                 FROM profiles 
                                 JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
                                 WHERE userID = ?""", (userID,))
@@ -877,14 +888,16 @@ def accountSubscriptions():
         videos = cursor.fetchall()  # List of tuples
 
         cursor.execute("""
-                                SELECT profilePicture, profileColorSets.profilePictureBorderColor
+                                SELECT profilePicture, profileColorSets.profilePictureBorderColor, channelURLEnabled, 
+                                channelURL
                                 FROM profiles 
                                 JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
                                 WHERE userID = ?""", (userID,))
         profilePicture = cursor.fetchone()
 
         cursor.execute("""
-                                SELECT profilePicture, profileColorSets.profilePictureBorderColor, accounts.userID, accounts.username
+                                SELECT profilePicture, profileColorSets.profilePictureBorderColor, accounts.userID, 
+                                accounts.username, channelURLEnabled, channelURL
                                 FROM profiles
                                 JOIN accounts ON profiles.userID = accounts.userID
                                 JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
