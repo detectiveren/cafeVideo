@@ -5,7 +5,6 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 
 cafe = Flask(__name__)
-cafe.secret_key = "supersecretkey"
 
 cafe.config['UPLOAD_FOLDER'] = 'static/videos/'
 cafe.config['ALLOWED_EXTENSIONS'] = {'mp4', 'avi', 'mov', 'mkv'}
@@ -24,6 +23,19 @@ os.makedirs(cafe.config['UPLOAD_PROFILE_BANNER_FOLDER'], exist_ok=True)
 
 # Set the location for the database
 cafeDatabasePath = 'cafeDatabase.db'
+
+# Security related features
+cafe.config.update(
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SECURE=False,  # Enable if hosting publicly
+    SESSION_COOKIE_SAMESITE="Lax"
+)
+cafeSecretKey = os.getenv("SECRET_CAFE_KEY")  # You MUST set a secret key in your environment variables
+
+if not cafeSecretKey:
+    raise RuntimeError("SECRET_CAFE_KEY environment variable not set! This is required to run the server.")
+
+cafe.config["SECRET_KEY"] = cafeSecretKey
 
 
 # Algorithm should revolve around DB entries as well, for example a table with a bunch of tags from videos and the
@@ -372,14 +384,17 @@ def watchPage():
 @cafe.route('/postComment', methods=["POST"])
 def sendComment():
     if request.method == "POST":
-        userID = session.get("userID")
-        videoID = session.get("redirectToVideoID")
+        if "userID" in session:
+            userID = session.get("userID")
+            videoID = session.get("redirectToVideoID")
 
-        comment = request.form["postComment"]
+            comment = request.form["postComment"]
 
-        post.sendCommentToDatabase(videoID, userID, comment)
+            post.sendCommentToDatabase(videoID, userID, comment)
 
-        return redirect(f'/watch?v={videoID}')
+            return redirect(f'/watch?v={videoID}')
+        else:
+            return redirect(url_for('loginPage'))
 
 
 @cafe.route('/postReply', methods=["POST"])
