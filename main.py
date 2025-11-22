@@ -11,7 +11,7 @@ cafe.config['ALLOWED_EXTENSIONS'] = {'mp4', 'avi', 'mov', 'mkv'}
 cafe.config['UPLOAD_THUMBNAILS_FOLDER'] = 'static/thumbnails'
 cafe.config['ALLOWED_THUMBNAIL_EXTENSIONS'] = {'jpg', 'png', 'webp'}
 cafe.config['UPLOAD_PROFILE_PICTURE_FOLDER'] = 'static/profile/pfp'
-cafe.config['ALLOWED_PROFILE_PICTURE_EXTENSIONS'] = {'jpg', 'png', 'webp', 'gif'}
+cafe.config['ALLOWED_PROFILE_PICTURE_EXTENSIONS'] = {'jpg', 'png', 'webp', 'gif', 'jpeg'}
 cafe.config['UPLOAD_PROFILE_BANNER_FOLDER'] = 'static/profile/banner'
 cafe.config['ALLOWED_PROFILE_BANNER_EXTENSIONS'] = {'jpg', 'png', 'webp', 'gif'}
 
@@ -42,6 +42,8 @@ cafe.config["SECRET_KEY"] = cafeSecretKey
 # userID of the user that's watching the video, if they keep watching videos with a video game tag then more entries
 # on the table with that userID and that tag will be entered then the server will curate their recommended feed
 # based of the most popular tags that show up for that user.
+
+# This codebase is a mess and needs to be revamped.
 
 
 def allowedFiletypes(filename, allowedExtensions):
@@ -122,10 +124,20 @@ def indexPage():
                             LIMIT 12
                         """, (userID,))
         subscription_videos = cursor.fetchall()
+        cursor.execute("""
+                                                SELECT notifications.*, profiles.profilePicture, profileColorSets.profilePictureBorderColor 
+                                                FROM notifications
+                                                JOIN profiles ON notifications.notificationSenderID = profiles.userID
+                                                JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
+                                                WHERE notificationRecipientID = ?
+                                            """,
+                       (userID,))
+        notifications = cursor.fetchall()
         conn.close()
         return render_template('index.html', username=username, videos=videos, userID=userID,
                                time_ago=time_ago, profilePicture=profilePicture, subscriptionsInfo=subscriptionsInfo,
-                               subscription_videos=subscription_videos, featureAccess=featureAccess)
+                               subscription_videos=subscription_videos, featureAccess=featureAccess,
+                               notifications=notifications)
     else:
         profilePicture = ["profilepicturetest.png"]
         conn.close()
@@ -136,7 +148,13 @@ def indexPage():
 
 @cafe.route('/login')
 def loginPage():
-    return render_template('login.html')
+    """Displays the login page to the user by rendering the login page template"""
+    username = session.get("username")
+
+    if username:
+        return redirect(url_for("indexPage"))
+    else:
+        return render_template('login.html')
 
 
 @cafe.route('/loginAuth', methods=['GET', 'POST'])
@@ -220,9 +238,19 @@ def upload():
                                         JOIN subscriptions ON subscriptions.subscribedToUserID = accounts.userID
                                         WHERE subscriptions.userID = ?""", (userID,))
         subscriptionsInfo = cursor.fetchall()
+        cursor.execute("""
+                                                SELECT notifications.*, profiles.profilePicture, profileColorSets.profilePictureBorderColor 
+                                                FROM notifications
+                                                JOIN profiles ON notifications.notificationSenderID = profiles.userID
+                                                JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
+                                                WHERE notificationRecipientID = ?
+                                            """,
+                       (userID,))
+        notifications = cursor.fetchall()
 
         return render_template("upload.html", username=username, userID=session.get("userID"),
-                               profilePicture=profilePicture, subscriptionsInfo=subscriptionsInfo)
+                               profilePicture=profilePicture, subscriptionsInfo=subscriptionsInfo,
+                               notifications=notifications)
     else:
         return redirect(url_for('loginPage'))
 
@@ -276,10 +304,15 @@ def uploadVideo():
 @cafe.route('/watch')
 def watchPage():
     """Function to display the watch page"""
+    #  userAgent = request.user_agent.string
     videoID = request.args.get('v')
     session['redirectToVideoID'] = videoID
     username = session.get('username')
     userID = session.get('userID')
+    #  print(userAgent)
+
+    #  if "AppleWebKit" in str(userAgent):
+    #      print("you are using Safari")
 
     if videoID:
         # Retrieve video details
@@ -365,8 +398,19 @@ def watchPage():
                                         JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
                                         WHERE userID = ?""", (userID,))
                 profilePicture = cursor.fetchone()
+                cursor.execute("""
+                                        SELECT notifications.*, profiles.profilePicture, profileColorSets.profilePictureBorderColor 
+                                        FROM notifications
+                                        JOIN profiles ON notifications.notificationSenderID = profiles.userID
+                                        JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
+                                        WHERE notificationRecipientID = ?
+                                    """,
+                            (userID,))
+                notifications = cursor.fetchall()
+                print(notifications)
             else:
                 profilePicture = ["profilepicturetest.png"]
+                notifications = []
 
             return render_template('watch.html', video=video, username=username, videos=videos,
                                    creatorUsername=creatorUsername, comments=comments, userID=userID,
@@ -374,7 +418,7 @@ def watchPage():
                                    currentViewCount=currentViewCount, num_of_subscribers=num_of_subscribers,
                                    isSubscribedToChannel=isSubscribedToChannel, num_of_likes=num_of_likes,
                                    isLikedVideo=isLikedVideo, datePublished=datePublished, time_ago=time_ago,
-                                   profilePicture=profilePicture)
+                                   profilePicture=profilePicture, notifications=notifications)
         else:
             return "Video not found", 404
     else:
@@ -462,16 +506,27 @@ def searchForVideo():
                                                     JOIN subscriptions ON subscriptions.subscribedToUserID = accounts.userID
                                                     WHERE subscriptions.userID = ?""", (userID,))
             subscriptionsInfo = cursor.fetchall()
+            cursor.execute("""
+                                                    SELECT notifications.*, profiles.profilePicture, profileColorSets.profilePictureBorderColor 
+                                                    FROM notifications
+                                                    JOIN profiles ON notifications.notificationSenderID = profiles.userID
+                                                    JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
+                                                    WHERE notificationRecipientID = ?
+                                                """,
+                           (userID,))
+            notifications = cursor.fetchall()
             conn.close()
             return render_template("search.html", searchQuery=searchQuery, username=username, videos=videos,
                                    num_of_videos=num_of_videos, userID=userID, time_ago=time_ago,
-                                   profilePicture=profilePicture, subscriptionsInfo=subscriptionsInfo)
+                                   profilePicture=profilePicture, subscriptionsInfo=subscriptionsInfo,
+                                   notifications=notifications)
         else:
             profilePicture = ["profilepicturetest.png"]
+            notifications = []
             conn.close()
             return render_template("search.html", searchQuery=searchQuery, username=username, videos=videos,
                                    num_of_videos=num_of_videos, userID=userID, time_ago=time_ago,
-                                   profilePicture=profilePicture)
+                                   profilePicture=profilePicture, notifications=notifications)
 
     else:
         return redirect(url_for("indexPage"))
@@ -511,6 +566,7 @@ def getAccountProfile():
                                 ORDER BY videoID DESC  -- Shows newest first
                             """, (userID,))
             videos = cursor.fetchall()  # List of tuples
+            num_of_videos = len(videos)
 
             cursor.execute("""
                             SELECT * 
@@ -546,16 +602,28 @@ def getAccountProfile():
                 isSubscribedToChannel = cursor.fetchone()
                 if isSubscribedToChannel:
                     isSubscribedToChannel = isSubscribedToChannel[0]
+                cursor.execute("""
+                                                        SELECT notifications.*, profiles.profilePicture, profileColorSets.profilePictureBorderColor 
+                                                        FROM notifications
+                                                        JOIN profiles ON notifications.notificationSenderID = profiles.userID
+                                                        JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
+                                                        WHERE notificationRecipientID = ?
+                                                    """,
+                               (userID,))
+                notifications = cursor.fetchall()
                 return render_template("profile.html", username=username, profileDetails=profileDetails, videos=videos,
                                        userID=userID_session, time_ago=time_ago, profilePicture=profilePicture,
                                        num_of_subscribers=num_of_subscribers, subscriptionsInfo=subscriptionsInfo,
-                                       channelID=userID, isSubscribedToChannel=isSubscribedToChannel)
+                                       channelID=userID, isSubscribedToChannel=isSubscribedToChannel,
+                                       num_of_videos=num_of_videos, notifications=notifications)
 
             else:
                 profilePicture = ["profilepicturetest.png"]
+                notifications = []
                 return render_template("profile.html", username=username, profileDetails=profileDetails, videos=videos,
                                        userID=userID_session, time_ago=time_ago, profilePicture=profilePicture,
-                                       num_of_subscribers=num_of_subscribers, channelID=userID)
+                                       num_of_subscribers=num_of_subscribers, channelID=userID,
+                                       num_of_videos=num_of_videos, notifications=notifications)
         else:
             return redirect(url_for("indexPage"))
     else:
@@ -621,6 +689,17 @@ def subscribeToUser():
             cursor.execute("INSERT INTO subscriptions (userID, subscribedToUserID) VALUES (?, ?)",
                            (subscriberUserID, creatorUserID))
             conn.commit()
+
+            # Send the notification to the database
+
+            cursor.execute("SELECT username FROM accounts WHERE userID = ?", (subscriberUserID,))
+            usernameOfSubscriber = cursor.fetchone()
+            print(usernameOfSubscriber[0])
+
+            post.sendNotificationToDatabase(creatorUserID, subscriberUserID,
+                                            f"{usernameOfSubscriber[0]} has subscribed to your channel", "",
+                                            "subscribedToChannel", "None")
+
             conn.close()
             return redirect(request.referrer)
     else:
@@ -660,7 +739,17 @@ def likeVideoFromCreatorID():
                 cursor.execute("INSERT INTO likedVideos (videoID, creatorID, userID) VALUES (?, ?, ?)",
                                (videoID, creatorUserID, userID))
                 conn.commit()
+                cursor.execute("SELECT username FROM accounts WHERE userID = ?", (userID,))
+                usernameOfLiker = cursor.fetchone()
+                print(usernameOfLiker[0])
+                cursor.execute("SELECT videoTitle FROM videos WHERE videoID = ?", (videoID,))
+                videoTitle = cursor.fetchone()
+                print(videoTitle[0])
                 conn.close()
+
+                post.sendNotificationToDatabase(creatorUserID, userID, f"{usernameOfLiker[0]} liked your video",
+                                                f"you received a like on {videoTitle[0]}", "likedVideo", "None")
+
                 return redirect(request.referrer)
         else:
             return redirect(url_for("indexPage"))
@@ -702,6 +791,17 @@ def likeCommentFromCommenterID():
                                (commentID, commenterID, userID))
                 conn.commit()
                 print("User has liked the comment")
+
+                # Send the notification to the database
+
+                cursor.execute("SELECT username FROM accounts WHERE userID = ?", (userID,))
+                usernameOfLiker = cursor.fetchone()
+                print(usernameOfLiker[0])
+
+                # Cutting corners here for a sec
+
+                post.sendNotificationToDatabase(commenterID, userID, f"{usernameOfLiker[0]} has liked your comment",
+                                                "", "likedComment", "None")
                 conn.close()
                 return redirect(request.referrer)
         else:
@@ -794,6 +894,16 @@ def editUserProfile():
                         """, (userID,))
         userAccessList = cursor.fetchall()
 
+        cursor.execute("""
+                                SELECT notifications.*, profiles.profilePicture, profileColorSets.profilePictureBorderColor 
+                                FROM notifications
+                                JOIN profiles ON notifications.notificationSenderID = profiles.userID
+                                JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
+                                WHERE notificationRecipientID = ?
+                                            """,
+                       (userID,))
+        notifications = cursor.fetchall()
+
         if userAccessList:
             userAccessDisplay = []
             for userAccess in userAccessList:
@@ -809,7 +919,7 @@ def editUserProfile():
 
         return render_template("edit_profile.html", username=username, userID=userID, profileInfo=profileInfo,
                                profileColorSets=profileColorSets, subscriptionsInfo=subscriptionsInfo,
-                               userAccessDisplay=userAccessDisplay)
+                               userAccessDisplay=userAccessDisplay, notifications=notifications)
     else:
         return redirect(url_for('indexPage'))
 
@@ -825,24 +935,24 @@ def getAccountSettings():
         cursor = conn.cursor()
 
         cursor.execute("""
-                                    SELECT profilePicture, profileBanner, channelURL, 
-                                    profileColorSets.profilePictureBorderColor, channelURLEnabled
-                                    FROM profiles 
-                                    JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
-                                    WHERE userID = ?""", (userID,))
+                                SELECT profilePicture, profileBanner, channelURL, 
+                                profileColorSets.profilePictureBorderColor, channelURLEnabled
+                                FROM profiles 
+                                JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
+                                WHERE userID = ?""", (userID,))
         profileInfo = cursor.fetchone()
 
         cursor.execute('SELECT profileSetID, profileSetName FROM profileColorSets')
         profileColorSets = cursor.fetchall()
 
         cursor.execute("""
-                                    SELECT profilePicture, profileColorSets.profilePictureBorderColor, accounts.userID, 
-                                    accounts.username, channelURLEnabled, channelURL
-                                    FROM profiles
-                                    JOIN accounts ON profiles.userID = accounts.userID
-                                    JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
-                                    JOIN subscriptions ON subscriptions.subscribedToUserID = accounts.userID
-                                    WHERE subscriptions.userID = ?""",
+                                SELECT profilePicture, profileColorSets.profilePictureBorderColor, accounts.userID, 
+                                accounts.username, channelURLEnabled, channelURL
+                                FROM profiles
+                                JOIN accounts ON profiles.userID = accounts.userID
+                                JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
+                                JOIN subscriptions ON subscriptions.subscribedToUserID = accounts.userID
+                                WHERE subscriptions.userID = ?""",
                        (userID,))
         subscriptionsInfo = cursor.fetchall()
 
@@ -853,6 +963,16 @@ def getAccountSettings():
                             WHERE userID = ?
                             """, (userID,))
         userAccessList = cursor.fetchall()
+
+        cursor.execute("""
+                                SELECT notifications.*, profiles.profilePicture, profileColorSets.profilePictureBorderColor 
+                                FROM notifications
+                                JOIN profiles ON notifications.notificationSenderID = profiles.userID
+                                JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
+                                WHERE notificationRecipientID = ?
+                                            """,
+                       (userID,))
+        notifications = cursor.fetchall()
 
         if userAccessList:
             userAccessDisplay = []
@@ -869,7 +989,7 @@ def getAccountSettings():
 
         return render_template("account_settings.html", username=username, userID=userID, profileInfo=profileInfo,
                                profileColorSets=profileColorSets, subscriptionsInfo=subscriptionsInfo,
-                               userAccessDisplay=userAccessDisplay)
+                               userAccessDisplay=userAccessDisplay, notifications=notifications)
     else:
         return redirect(url_for('indexPage'))
 
@@ -976,7 +1096,18 @@ def pageNotFound(error):
                                 WHERE userID = ?""", (userID,))
         profilePicture = cursor.fetchone()
 
-        return render_template('404.html', username=username, userID=userID, profilePicture=profilePicture), 404
+        cursor.execute("""
+                                SELECT notifications.*, profiles.profilePicture, profileColorSets.profilePictureBorderColor 
+                                FROM notifications
+                                JOIN profiles ON notifications.notificationSenderID = profiles.userID
+                                JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
+                                WHERE notificationRecipientID = ?
+                                            """,
+                       (userID,))
+        notifications = cursor.fetchall()
+
+        return render_template('404.html', username=username, userID=userID,
+                               profilePicture=profilePicture, notifications=notifications), 404
     else:
         return render_template('404.html'), 404
 
@@ -1023,9 +1154,20 @@ def accountSubscriptions():
                        (userID,))
         subscriptionsInfo = cursor.fetchall()
 
+        cursor.execute("""
+                                SELECT notifications.*, profiles.profilePicture, profileColorSets.profilePictureBorderColor 
+                                FROM notifications
+                                JOIN profiles ON notifications.notificationSenderID = profiles.userID
+                                JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
+                                WHERE notificationRecipientID = ?
+                                            """,
+                       (userID,))
+        notifications = cursor.fetchall()
+
         conn.close()
         return render_template('subscriptions.html', username=username, videos=videos, userID=userID,
-                               time_ago=time_ago, profilePicture=profilePicture, subscriptionsInfo=subscriptionsInfo)
+                               time_ago=time_ago, profilePicture=profilePicture, subscriptionsInfo=subscriptionsInfo,
+                               notifications=notifications)
     else:
         return redirect(url_for('indexPage'))
 
@@ -1069,13 +1211,24 @@ def explorePage():
                                     WHERE subscriptions.userID = ?""", (userID,))
         subscriptionsInfo = cursor.fetchall()
         print(subscriptionsInfo)
+        cursor.execute("""
+                                SELECT notifications.*, profiles.profilePicture, profileColorSets.profilePictureBorderColor 
+                                FROM notifications
+                                JOIN profiles ON notifications.notificationSenderID = profiles.userID
+                                JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
+                                WHERE notificationRecipientID = ?
+                                            """,
+                       (userID,))
+        notifications = cursor.fetchall()
         return render_template('explore.html', username=username, videos=videos, userID=userID,
-                               time_ago=time_ago, profilePicture=profilePicture, subscriptionsInfo=subscriptionsInfo)
+                               time_ago=time_ago, profilePicture=profilePicture, subscriptionsInfo=subscriptionsInfo,
+                               notifications=notifications)
     else:
         profilePicture = ["profilepicturetest.png"]
+        notifications = []
     conn.close()
     return render_template('explore.html', username=username, videos=videos, userID=userID,
-                           time_ago=time_ago, profilePicture=profilePicture)
+                           time_ago=time_ago, profilePicture=profilePicture, notifications=notifications)
 
 
 @cafe.route('/lattes')
@@ -1128,15 +1281,25 @@ def lattePage():
 
         print(usersList)
 
+        cursor.execute("""
+                                SELECT notifications.*, profiles.profilePicture, profileColorSets.profilePictureBorderColor 
+                                FROM notifications
+                                JOIN profiles ON notifications.notificationSenderID = profiles.userID
+                                JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
+                                WHERE notificationRecipientID = ?
+                                            """,
+                       (userID,))
+        notifications = cursor.fetchall()
+
         for user in usersList:
             if user[0] == userID:
                 return render_template('lattes.html', username=username, videos=lattes, userID=userID,
                                        time_ago=time_ago, profilePicture=profilePicture,
-                                       subscriptionsInfo=subscriptionsInfo)
+                                       subscriptionsInfo=subscriptionsInfo, notifications=notifications)
             else:
                 return abort(404)
     else:
         return abort(404)
 
 
-cafe.run("127.0.0.1", 5000, debug=True)
+cafe.run("192.168.1.114", 5000, debug=True)

@@ -38,6 +38,19 @@ def sendCommentToDatabase(videoID, userID, comment):
     try:
         cursor.execute("INSERT INTO comments (videoID, userID, comment) VALUES (?, ?, ?)", (videoID, userID, comment))
         conn.commit()
+
+        # Send the notification to the database
+
+        cursor.execute("SELECT username FROM accounts WHERE userID = ?", (userID,))
+        usernameOfCommenter = cursor.fetchone()
+        print(usernameOfCommenter[0])
+        cursor.execute("SELECT userID FROM videos WHERE videoID = ?", (videoID,))
+        creatorID = cursor.fetchone()
+
+        if int(userID) != int(creatorID[0]):
+            sendNotificationToDatabase(creatorID[0], userID, f"{usernameOfCommenter[0]} has commented on your video",
+                                       "", "commentOnVideo", "None")
+
         print("Comment sent")
     except sqlite3.IntegrityError:
         print("Error with posting comment")
@@ -133,6 +146,28 @@ def updateProfileColorTheme(profileColorTheme, userID):
         return True, "Profile Color Theme has been updated"
     except sqlite3.IntegrityError:
         return False, "Profile Color Theme failed to update"
+    finally:
+        cursor.close()
+        conn.close()
+
+
+def sendNotificationToDatabase(recipientID, senderID, title, description, item, image):
+    conn = sqlite3.connect(cafeDatabasePath)
+    conn.execute('PRAGMA foreign_keys = ON')
+
+    cursor = conn.cursor()
+
+    notificationSent = int(time.time())
+
+    try:
+        cursor.execute("INSERT INTO notifications (notificationRecipientID, notificationSenderID, notificationTitle, "
+                       "notificationDescription, notificationDateTime, notificationItem, notificationImage, "
+                       "notificationRead) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                       (recipientID, senderID, title, description, notificationSent, item, image, 0))
+        conn.commit()
+        print("Notification sent")
+    except sqlite3.IntegrityError:
+        print("Error with sending notification")
     finally:
         cursor.close()
         conn.close()

@@ -545,6 +545,19 @@ video {
     border-radius: 5px;
     text-align: left;  /* Center the title */
     margin-bottom: 15px;  /* Space between title and video posts */
+    height: 20px;
+    margin-right: 1px;
+    display: flex;
+    flex-direction: row;
+}
+
+.cafe-profile-list-title-alignment {
+    line-height: 0px;
+    margin-top: 12px;
+}
+
+.cafe-profile-list-title-videos-number-alignment {
+    margin-left: auto;
 }
 
 .cafe-profile-link {
@@ -1055,6 +1068,99 @@ video {
     gap: 10px;
     width: 100%;
 }
+
+.cafe-navbar-notifications-button {
+    height: 36px;
+    width: 41px;
+    border-radius: 5px;
+    background-color: #C78A4B;
+    opacity: 1.0;
+    margin-right: 5px;
+}
+
+.cafe-navbar-notifications-button:hover {
+    background-color: orange;
+    opacity: 0.6;
+}
+
+.cafe-notifications-box {
+    background-color: #8A7A5E;
+    border: 2px solid #C78A4B;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    margin-right: 2px;
+    width: 440px;
+    height: 440px;
+    position: fixed;
+    right: 0;
+    display: block;
+    text-align: left;
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+    overflow: auto;
+}
+
+.hidden {
+    display: none;
+}
+
+.cafe-notifications-box-layout {
+    display: flex;
+    flex-direction: column;
+}
+
+.cafe-notifications-box-header-title {
+    text-align: center;
+    margin: 0 auto;
+    color: White;
+    width: 425px;
+    background-color: #C78A4B;
+    border-radius: 5px;
+
+}
+
+.cafe-notifications-box-body {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.cafe-notifications-box-body-item {
+    border: 2px solid #C78A4B;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    border-radius: 5px;
+    margin: 0 auto;
+    width: 425px;
+    min-height: 90px;
+    display: flex;
+    flex-direction: row;
+    gap: 25px;
+    color: White;
+    background-color: #3a4c4b;
+}
+
+.cafe-notifications-box-body-item-details {
+    display: flex;
+    flex-direction: column;
+    margin-top: 2px;
+    line-height: 1;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    width: 70%;
+
+}
+
+.cafe-notifications-box-body-profile-details {
+    margin-left: 10px;
+    margin-top: 10px;
+}
+
+.overlapping-element-safari {
+    position: relative; /* or fixed/absolute */
+    z-index: 999; /* or any high value */
+    -webkit-transform: translateZ(1px); /* or translate3d(0, 0, 1px) */
+    transform: translateZ(1px);
+}
+
 
 body, html {
     background-color: #8A7A5E;

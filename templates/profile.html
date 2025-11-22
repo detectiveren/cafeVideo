@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <title>cafeVideo - {{ profileDetails[1] }}</title>
+    <script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
 </head>
 <body>
     <div class="cafe-header-navbar">
@@ -18,6 +19,9 @@
             <!-- If the user is logged in, show username and logout button -->
             <div class="cafe-header-navbar-item-right cafe-header-navbar-item">
                 {% if username %}
+                    <button id="notificationButton" class="cafe-navbar-notifications-button">
+                        N
+                    </button>
                     <a class="cafe-navbar-upload-button" href="{{ url_for('upload') }}">
                         <img class="cafe-navbar-upload-button-img" src="{{ url_for('static', filename='images/upload.png') }}">
                     </a>
@@ -37,16 +41,47 @@
             </div>
         </div>
     </div>
+    <div id="cafeNotificationsPanel" class="cafe-notifications-box hidden">
+        <div class="cafe-notifications-box-layout">
+            <div class="cafe-notifications-box-header">
+                <div class="cafe-notifications-box-header-title">
+                    <h3>Notifications</h3>
+                </div>
+            </div>
+            <div class="cafe-notifications-box-body">
+                {% for notification in notifications %}
+                    <div class="cafe-notifications-box-body-item">
+                        <div class="cafe-notifications-box-body-profile-details">
+                            <!-- Creator profile picture for testing -->
+                            <div class="cafe-watch-creator-profile-picture" style="border-color: {{ notification[10] or '#C78A4B' }} !important;">
+                                <img class="cafe-watch-creator-profile-picture-image" src="{{ url_for('static', filename='profile/pfp/' + (notification[9] if notification[9] else 'profilepicturetest.png')) }}">
+                            </div>
+                        </div>
+                        <div class="cafe-notifications-box-body-item-details">
+                            <p style="font-weight: bold;" class="cafe-notifications-item-title">{{ notification[3] }}</p>
+                            <p style="font-size: 12px;" class="cafe-notifications-item-description">{{ notification[4] }}</p>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
     <div class="cafe-main-body">
         <div class="cafe-sidebar-left">
             <div class="cafe-sidebar-left-contents">
                 <div class="cafe-sidebar-button-contents">
+                    <p class="cafe-account-settings-sidebar-title cafe-account-settings-sidebar-title-layout">Navigation</p>
                     <a href="{{ url_for('indexPage') }}">Home</a>
                     <a href="{{ url_for('explorePage') }}">Explore</a>
                     {% if username %}
                         <a href="{{ url_for('accountSubscriptions') }}">Subscriptions</a>
                     {% endif %}
-                    <a href="{{ url_for('indexPage') }}">Lattes</a>
+                    <a href="{{ url_for('indexPage') }}">cafeCorners</a>
+                    <p class="cafe-account-settings-sidebar-title cafe-account-settings-sidebar-title-layout">Your account</p>
+                    <a href="{{ url_for('indexPage') }}">Watch History</a>
+                    <a href="{{ url_for('indexPage') }}">Playlists</a>
+                    <a href="{{ url_for('indexPage') }}">Liked videos</a>
+                    <a href="{{ url_for('indexPage') }}">Bookmarks</a>
                 </div>
                 {% if username %}
                     <div class="cafe-sidebar-left-title">
@@ -125,7 +160,10 @@
                 </div>
             </div>
             <div class="cafe-profile-list-contents-videos" style="border-color: {{ profileDetails[17] or '#C78A4B' }} !important;">
-                <p class="cafe-profile-list-title" style="background-color: {{ profileDetails[18] or '#C78A4B' }} !important;">{{ profileDetails[1] }}'s Videos</p>
+                <div class="cafe-profile-list-title" style="background-color: {{ profileDetails[18] or '#C78A4B' }} !important;">
+                    <p class="cafe-profile-list-title-alignment">{{ profileDetails[1] }}'s Videos</p>
+                    <p class="cafe-profile-list-title-alignment cafe-profile-list-title-videos-number-alignment">{{ num_of_videos }} videos</p>
+                </div>
                 <div class="cafe-video-posts-row">
                     <!-- Videos go in this element -->
                     {% for video in videos %}
