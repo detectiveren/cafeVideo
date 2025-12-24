@@ -171,3 +171,29 @@ def sendNotificationToDatabase(recipientID, senderID, title, description, item, 
     finally:
         cursor.close()
         conn.close()
+
+
+def sendWatchedVideoToDatabase(userID, videoID):
+    conn = sqlite3.connect(cafeDatabasePath)
+    conn.execute('PRAGMA foreign_keys = ON')
+
+    cursor = conn.cursor()
+
+    dateOfVideoWatched = int(time.time())
+
+    try:
+        cursor.execute("SELECT * FROM watchHistory WHERE userID = ? AND videoID = ?", (userID, videoID))
+        videoWatched = cursor.fetchone()
+
+        if videoWatched:
+            cursor.execute("UPDATE watchHistory SET historyDateTime = ? WHERE userID = ? AND videoID = ?", (dateOfVideoWatched, userID, videoID))
+            conn.commit()
+        else:
+            cursor.execute("INSERT INTO watchHistory (userID, videoID, historyDateTime) VALUES (?, ?, ?)", (userID, videoID, dateOfVideoWatched))
+            conn.commit()
+    except sqlite3.IntegrityError:
+        print("Error when updating watch history")
+    finally:
+        cursor.close()
+        conn.close()
+

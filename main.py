@@ -319,6 +319,7 @@ def watchPage():
         conn = sqlite3.connect(cafeDatabasePath)
         conn.execute('PRAGMA foreign_keys = ON')
         cursor = conn.cursor()
+
         cursor.execute("""SELECT * 
                                 FROM videos 
                                 JOIN profiles ON profiles.userID = videos.userID
@@ -391,6 +392,8 @@ def watchPage():
             datePublished = getVideoDatetime(timestamp)
 
             if username:
+                post.sendWatchedVideoToDatabase(userID, videoID)  # Add video to user's watch history
+
                 cursor.execute("""
                                         SELECT profilePicture, profileColorSets.profilePictureBorderColor, 
                                         channelURLEnabled, channelURL
@@ -1358,6 +1361,68 @@ def likedVideosPage():
 
         conn.close()
         return render_template('liked_videos.html', username=username, videos=videos, userID=userID,
+                               time_ago=time_ago, profilePicture=profilePicture, subscriptionsInfo=subscriptionsInfo,
+                               notifications=notifications)
+    else:
+        return redirect(url_for('indexPage'))
+
+
+@cafe.route("/history/videos")
+def watchHistory():
+    username = session.get("username")
+    userID = session.get("userID")
+
+    if username:
+        conn = sqlite3.connect(cafeDatabasePath)
+        conn.execute('PRAGMA foreign_keys = ON')
+        cursor = conn.cursor()
+
+        # Fetch the latest videos for the watch history section
+        cursor.execute("""
+                        SELECT videos.videoID, accounts.username, videos.videoTitle, videos.views, 
+                        videos.videoThumbnail, videos.datetime, profiles.profilePicture, 
+                        profileColorSets.profilePictureBorderColor
+                        FROM videos
+                        JOIN accounts ON videos.userID = accounts.userID
+                        JOIN profiles ON profiles.userID = accounts.userID
+                        JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
+                        JOIN watchHistory ON watchHistory.videoID = videos.videoID
+                        WHERE watchHistory.userID = ?
+                        ORDER BY watchHistory.historyDateTime DESC  -- Shows newest first
+                    """, (userID,))
+        videos = cursor.fetchall()  # List of tuples
+
+        cursor.execute("""
+                                    SELECT profilePicture, profileColorSets.profilePictureBorderColor, channelURLEnabled, 
+                                    channelURL
+                                    FROM profiles 
+                                    JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
+                                    WHERE userID = ?""", (userID,))
+        profilePicture = cursor.fetchone()
+
+        cursor.execute("""
+                                    SELECT profilePicture, profileColorSets.profilePictureBorderColor, accounts.userID, 
+                                    accounts.username, channelURLEnabled, channelURL
+                                    FROM profiles
+                                    JOIN accounts ON profiles.userID = accounts.userID
+                                    JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
+                                    JOIN subscriptions ON subscriptions.subscribedToUserID = accounts.userID
+                                    WHERE subscriptions.userID = ?""",
+                       (userID,))
+        subscriptionsInfo = cursor.fetchall()
+
+        cursor.execute("""
+                                SELECT notifications.*, profiles.profilePicture, profileColorSets.profilePictureBorderColor 
+                                FROM notifications
+                                JOIN profiles ON notifications.notificationSenderID = profiles.userID
+                                JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
+                                WHERE notificationRecipientID = ?
+                                """,
+                       (userID,))
+        notifications = cursor.fetchall()
+
+        conn.close()
+        return render_template('history.html', username=username, videos=videos, userID=userID,
                                time_ago=time_ago, profilePicture=profilePicture, subscriptionsInfo=subscriptionsInfo,
                                notifications=notifications)
     else:

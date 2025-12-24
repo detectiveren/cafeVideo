@@ -18,14 +18,18 @@
     </div>
     <div class="cafe-main-body">
         <div class="cafe-sidebar-left">
-            <a href="{{ url_for('indexPage') }}">Home</a>
-            <a href="{{ url_for('explorePage') }}">Explore</a>
-            <a href="{{ url_for('indexPage') }}">cafeCorners</a>
-            <p class="cafe-account-settings-sidebar-title cafe-account-settings-sidebar-title-layout">Your account</p>
-            <a href="{{ url_for('indexPage') }}">Watch History</a>
-            <a href="{{ url_for('indexPage') }}">Playlists</a>
-            <a href="{{ url_for('likedVideosPage') }}">Liked videos</a>
-            <a href="{{ url_for('indexPage') }}">Bookmarks</a>
+            <div class="cafe-sidebar-left-contents">
+                <div class="cafe-sidebar-button-contents">
+                    <a href="{{ url_for('indexPage') }}">Home</a>
+                    <a href="{{ url_for('explorePage') }}">Explore</a>
+                    <a href="{{ url_for('indexPage') }}">cafeCorners</a>
+                    <p class="cafe-account-settings-sidebar-title cafe-account-settings-sidebar-title-layout">Your account</p>
+                    <a href="{{ url_for('indexPage') }}">Watch History</a>
+                    <a href="{{ url_for('indexPage') }}">Playlists</a>
+                    <a href="{{ url_for('likedVideosPage') }}">Liked videos</a>
+                    <a href="{{ url_for('indexPage') }}">Bookmarks</a>
+                </div>
+            </div>
         </div>
         <div class="cafe-video-list-body">
             <div class="cafe-login-body">

@@ -167,7 +167,11 @@
                 </div>
                 <div class="cafe-comment-section-body">
                     <div class="cafe-post-comment">
-                        <h2>Comment Section - {{ num_of_comments }} Comments</h2>
+                        {% if num_of_comments == 1 %}
+                            <h2>Comment Section - {{ num_of_comments }} Comment</h2>
+                        {% else %}
+                            <h2>Comment Section - {{ num_of_comments }} Comments</h2>
+                        {% endif %}
                         {% if username %}
                         <form action="/postComment" method="POST" class="cafe-comment-form">
                             <input type="text" name="postComment" placeholder="Comment on this video" class="cafe-comment-box" required>
