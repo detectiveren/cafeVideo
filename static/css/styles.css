@@ -830,6 +830,11 @@ video {
     width: 100px;
 }
 
+.cafe-margin-like-comment-button {
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
 .cafe-profile-list-settings {
     margin-left: auto;
 }

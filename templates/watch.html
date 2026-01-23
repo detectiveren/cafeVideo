@@ -143,11 +143,13 @@
                                 <p class="cafe-comment-likes-gap">{{ comment[6] }} Likes</p>
                                 <div class="cafe-watch-video-stats-vertical-divider"></div>
                                 <div class="cafe-comment-like-button">
-                                    <button
+                                    <div class="cafe-margin-like-comment-button">
+                                        <button
                                             class="likeCommentButton {{ 'cafe-comment-button-liked' if comment[7] == 1 else 'cafe-comment-button' }}"
                                             data-url="{{ url_for('likeCommentFromCommenterID', commentID=comment[0], commenterID=comment[5]) }}">
                                             {{ 'Liked' if comment[7] == 1 else 'Like' }}
-                                    </button>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
