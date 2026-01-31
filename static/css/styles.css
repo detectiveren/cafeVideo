@@ -953,6 +953,11 @@ video {
     line-height: 0.6;
 }
 
+.cafe-profile-list-font-size {
+    font-size: 16px;
+    line-height: 0.6;
+}
+
 .cafe-account-settings-row-layout {
     display: flex;
     flex-direction: column;
@@ -1169,6 +1174,10 @@ video {
     z-index: 999; /* or any high value */
     -webkit-transform: translateZ(1px); /* or translate3d(0, 0, 1px) */
     transform: translateZ(1px);
+}
+
+.cafe-sidebar-subscriptions-contents {
+    margin-bottom: 20px;
 }
 
 

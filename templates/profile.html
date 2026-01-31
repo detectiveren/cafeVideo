@@ -27,11 +27,14 @@
                         {% endif %}
                         {% if username %}
                             {% if profileDetails[0] != userID %}
-                                {% if isSubscribedToChannel %}
-                                    <a href="/subscribeUser?creatorID={{ channelID }}" class="cafe-profile-list-subscribe" style="background-color: {{ profileDetails[18] or '#C78A4B' }} !important;">Subscribed</a>
-                                {% else %}
-                                    <a href="/subscribeUser?creatorID={{ channelID }}" class="cafe-profile-list-subscribe" style="background-color: {{ profileDetails[18] or '#C78A4B' }} !important;">Subscribe</a>
-                                {% endif %}
+                                <div class="cafe-profile-list-subscribe">
+                                    <button style="background-color: {{ profileDetails[18] or '#C78A4B' }} !important;"
+                                            id="subscribeButton"
+                                            class="cafe-comment-button cafe-profile-list-font-size"
+                                            data-url="{{ url_for('subscribeToUser', creatorID=channelID) }}">
+                                            {{ 'Subscribed' if isSubscribedToChannel else 'Subscribe' }}
+                                    </button>
+                                </div>
                             {% endif %}
                         {% endif %}
                     </div>
