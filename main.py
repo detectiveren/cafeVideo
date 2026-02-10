@@ -3,6 +3,8 @@ import sqlite3, createAccount, post, os, modifyAccount
 from time_converter import time_ago, getVideoDatetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
+from werkzeug.exceptions import NotFound
+from viewSimplifier import viewSimplify
 
 cafe = Flask(__name__)
 
@@ -337,7 +339,7 @@ def watchPage():
             viewCount = viewCount[0]
             if viewCount:
                 viewCount = viewCount + 1
-                currentViewCount = viewCount
+                currentViewCount = viewSimplify(viewCount)
                 cursor.execute("UPDATE videos SET views = ? WHERE videoID = ?", (viewCount, videoID))
             else:
                 addFirstView = 1
@@ -421,7 +423,7 @@ def watchPage():
                                    currentViewCount=currentViewCount, num_of_subscribers=num_of_subscribers,
                                    isSubscribedToChannel=isSubscribedToChannel, num_of_likes=num_of_likes,
                                    isLikedVideo=isLikedVideo, datePublished=datePublished, time_ago=time_ago,
-                                   profilePicture=profilePicture, notifications=notifications)
+                                   profilePicture=profilePicture, notifications=notifications, viewSimplifier=viewSimplify)
         else:
             return "Video not found", 404
     else:
@@ -1115,6 +1117,11 @@ def pageNotFound(error):
         return render_template('404.html'), 404
 
 
+@cafe.errorhandler(405)
+def pageForbidden(error):
+    return pageNotFound(NotFound)
+
+
 @cafe.route('/subscriptions')
 def accountSubscriptions():
     username = session.get("username")
@@ -1427,6 +1434,98 @@ def watchHistory():
                                notifications=notifications)
     else:
         return redirect(url_for('indexPage'))
+
+
+@cafe.route('/playlists/videos')
+def userPlaylist():
+    username = session.get("username")
+    userID = session.get("userID")
+
+    if username:
+        conn = sqlite3.connect(cafeDatabasePath)
+        conn.execute('PRAGMA foreign_keys = ON')
+        cursor = conn.cursor()
+
+        # Fetch the playlists created by the user
+        cursor.execute("""
+                        SELECT playlists.playlistID, playlists.userID, playlists.playlistName, playlists.playlistType, 
+                        playlists.visibilityType, accounts.username, profiles.profilePicture, 
+                        profileColorSets.profilePictureBorderColor
+                        FROM playlists
+                        JOIN accounts ON playlists.userID = accounts.userID
+                        JOIN profiles ON profiles.userID = accounts.userID
+                        JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
+                        WHERE playlists.userID = ?
+                        ORDER BY playlists.playlistID DESC
+                    """, (userID,))
+        userPlaylists = cursor.fetchall()  # List of tuples
+
+        print(userPlaylists)
+
+        cursor.execute("""
+                                        SELECT profilePicture, profileColorSets.profilePictureBorderColor, channelURLEnabled, 
+                                        channelURL
+                                        FROM profiles 
+                                        JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
+                                        WHERE userID = ?""", (userID,))
+        profilePicture = cursor.fetchone()
+
+        cursor.execute("""
+                                        SELECT profilePicture, profileColorSets.profilePictureBorderColor, accounts.userID, 
+                                        accounts.username, channelURLEnabled, channelURL
+                                        FROM profiles
+                                        JOIN accounts ON profiles.userID = accounts.userID
+                                        JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
+                                        JOIN subscriptions ON subscriptions.subscribedToUserID = accounts.userID
+                                        WHERE subscriptions.userID = ?""",
+                       (userID,))
+        subscriptionsInfo = cursor.fetchall()
+
+        cursor.execute("""
+                                    SELECT notifications.*, profiles.profilePicture, profileColorSets.profilePictureBorderColor 
+                                    FROM notifications
+                                    JOIN profiles ON notifications.notificationSenderID = profiles.userID
+                                    JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
+                                    WHERE notificationRecipientID = ?
+                                    """,
+                       (userID,))
+        notifications = cursor.fetchall()
+
+        conn.close()
+        return render_template('playlists.html', username=username, userPlaylists=userPlaylists, userID=userID,
+                               time_ago=time_ago, profilePicture=profilePicture, subscriptionsInfo=subscriptionsInfo,
+                               notifications=notifications)
+    else:
+        return redirect(url_for('indexPage'))
+
+
+@cafe.route('/playlists/create', methods=["POST"])
+def playlistCreate():
+    if request.method == "POST":
+        try:
+            userID = session.get('userID')
+        except:
+            return redirect(url_for('indexPage'))
+
+        playlistName = request.form["name"]
+        playlistDescription = request.form["description"]
+        playlistVisibility = request.form["visibility"]
+
+        print(f"Playlist Name: {playlistName}\nPlaylist Description: {playlistDescription}\nPlaylistVisibility: {playlistVisibility}")
+
+        conn = sqlite3.connect(cafeDatabasePath)
+        conn.execute('PRAGMA foreign_keys = ON')
+        cursor = conn.cursor()
+
+        if playlistName:
+            cursor.execute("INSERT INTO playlists (userID, playlistName, playlistDescription, playlistType, "
+                           "visibilityType) VALUES (?, ?, ?, ?, ?)",
+                           (userID, playlistName, playlistDescription, "Regular", playlistVisibility))
+            conn.commit()
+
+        return redirect(request.referrer)
+    else:
+        return abort(404)
 
 
 cafe.run("192.168.1.114", 5000, debug=True)

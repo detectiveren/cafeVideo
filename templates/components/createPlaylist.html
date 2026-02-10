@@ -1,0 +1,24 @@
+<div id="cafePlaylistCreate" class="cafe-playlist-create-box hidden">
+    <div class="cafe-playlist-create-box-contents">
+        <h2>Create Playlist</h2>
+        <div class="cafe-playlist-create-box-contents-form">
+            <form action="/playlists/create" method="POST" class="cafe-login-details" enctype="multipart/form-data">
+                <h3>Playlist Name</h3>
+                <input type="text" name="name" placeholder="My Playlist" class="cafe-creation-input-box" required>
+                <div class="cafe-align-label-input">
+                    <label for="description"><h3>Playlist Description</h3></label>
+                    <textarea id="description" name="description" maxlength="240" placeholder="My Playlist Description" class="cafe-creation-description-box"></textarea>
+                </div>
+                <h3>Visibility</h3>
+                <label for="visibility_public">
+                    <input type="radio" id="visibility_public" name="visibility" value="Public" required> Public
+                </label>
+                <label for="visibility_private">
+                    <input type="radio" id="visibility_private" name="visibility" value="Private"> Private
+                </label>
+                <br><br>
+                <button type="submit" class="cafe-comment-button">Save</button>
+            </form>
+        </div>
+    </div>
+</div>

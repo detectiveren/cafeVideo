@@ -1180,6 +1180,129 @@ video {
     margin-bottom: 20px;
 }
 
+.cafe-playlists-header-title {
+    background-color: #C78A4B;  /* Dark background for title */
+    color: #f1f1f1;  /* White text color for title */
+    padding: 10px;
+    border-radius: 5px;
+    text-align: left;  /* Center the title */
+    margin-bottom: 15px;  /* Space between title and video posts */
+    display: flex;
+    flex-direction: row;
+    height: 20px;
+    align-items: center;
+    width: 99%;
+    line-height: 0;
+}
+
+.cafe-playlists-header-title-fix {
+    margin-left: auto;
+    height: 10px;
+    line-height: 0.6;
+
+}
+
+.cafe-playlist-create-button-font {
+    font-size: 16px;
+    line-height: 0;
+    margin-bottom: 5px;
+    margin-right: -10px;
+}
+
+.cafe-playlist-create-box {
+    background-color: #8A7A5E;
+    border: 2px solid #C78A4B;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    margin-right: -7px;
+    width: 440px;
+    height: 440px;
+    float: right;
+    right: 0;
+    display: block;
+    text-align: left;
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+    overflow: auto;
+    margin-top: -15px;
+    color: White;
+}
+
+.cafe-playlist-create-box.hidden {
+    display: none;
+}
+
+.cafe-playlist-content-layout {
+    color: White;
+}
+
+.cafe-playlist-create-box-contents {
+    margin-left: 5px;
+}
+
+.cafe-creation-input-box {
+    width: 400px;
+    border-radius: 5px;
+    color: white;
+    background: rgba(178, 122, 84, 0.75);
+    border: none;
+    height: 25px;
+}
+
+.cafe-creation-input-box::placeholder {
+    color: white;
+}
+
+.cafe-creation-input-box:focus {
+    background: rgba(178, 122, 84, 0.9);
+    outline: none;
+}
+
+.cafe-creation-description-box {
+    max-width: 400px;
+    max-height: 150px;
+    border-radius: 5px;
+    color: white;
+    background: rgba(178, 122, 84, 0);
+    border: 2px solid #C78A4B;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5); /* Subtle shadow for depth */
+    height: 100px;
+}
+
+.cafe-creation-description-box::placeholder {
+    color: white;
+}
+
+.cafe-creation-description-box:focus {
+    outline: none;
+}
+
+.cafe-playlist-contents {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+}
+
+.cafe-playlists-contents-box {
+    border-radius: 5px;
+    border: 2px solid #C78A4B;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5); /* Subtle shadow for depth */
+    width: 250px;
+    height: 100px;
+}
+
+.cafe-playlists-contents-profile-details {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+}
+
+.cafe-playlists-contents-margin {
+    margin-left: 5px;
+}
+
+.cafe-playlists-contents-profile-name-line {
+    line-height: 0.6;
+}
 
 body, html {
     background-color: #8A7A5E;
