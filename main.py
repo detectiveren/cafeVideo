@@ -4,7 +4,7 @@ from time_converter import time_ago, getVideoDatetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from werkzeug.exceptions import NotFound
-from viewSimplifier import viewSimplify
+from numberSimplifier import viewSimplify
 
 cafe = Flask(__name__)
 
@@ -132,6 +132,7 @@ def indexPage():
                                 JOIN profiles ON notifications.notificationSenderID = profiles.userID
                                 JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
                                 WHERE notificationRecipientID = ?
+                                ORDER BY notificationDateTime DESC
                                             """,
                        (userID,))
         notifications = cursor.fetchall()
@@ -246,6 +247,7 @@ def upload():
                                                 JOIN profiles ON notifications.notificationSenderID = profiles.userID
                                                 JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
                                                 WHERE notificationRecipientID = ?
+                                                ORDER BY notificationDateTime DESC
                                             """,
                        (userID,))
         notifications = cursor.fetchall()
@@ -409,6 +411,7 @@ def watchPage():
                                         JOIN profiles ON notifications.notificationSenderID = profiles.userID
                                         JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
                                         WHERE notificationRecipientID = ?
+                                        ORDER BY notificationDateTime DESC
                                     """,
                                (userID,))
                 notifications = cursor.fetchall()
@@ -517,6 +520,7 @@ def searchForVideo():
                                                     JOIN profiles ON notifications.notificationSenderID = profiles.userID
                                                     JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
                                                     WHERE notificationRecipientID = ?
+                                                    ORDER BY notificationDateTime DESC
                                                 """,
                            (userID,))
             notifications = cursor.fetchall()
@@ -613,6 +617,7 @@ def getAccountProfile():
                                                         JOIN profiles ON notifications.notificationSenderID = profiles.userID
                                                         JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
                                                         WHERE notificationRecipientID = ?
+                                                        ORDER BY notificationDateTime DESC
                                                     """,
                                (userID_session,))
                 notifications = cursor.fetchall()
@@ -905,6 +910,7 @@ def editUserProfile():
                                 JOIN profiles ON notifications.notificationSenderID = profiles.userID
                                 JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
                                 WHERE notificationRecipientID = ?
+                                ORDER BY notificationDateTime DESC
                                             """,
                        (userID,))
         notifications = cursor.fetchall()
@@ -975,6 +981,7 @@ def getAccountSettings():
                                 JOIN profiles ON notifications.notificationSenderID = profiles.userID
                                 JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
                                 WHERE notificationRecipientID = ?
+                                ORDER BY notificationDateTime DESC
                                             """,
                        (userID,))
         notifications = cursor.fetchall()
@@ -1107,6 +1114,7 @@ def pageNotFound(error):
                                 JOIN profiles ON notifications.notificationSenderID = profiles.userID
                                 JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
                                 WHERE notificationRecipientID = ?
+                                ORDER BY notificationDateTime DESC
                                             """,
                        (userID,))
         notifications = cursor.fetchall()
@@ -1170,6 +1178,7 @@ def accountSubscriptions():
                                 JOIN profiles ON notifications.notificationSenderID = profiles.userID
                                 JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
                                 WHERE notificationRecipientID = ?
+                                ORDER BY notificationDateTime DESC
                                             """,
                        (userID,))
         notifications = cursor.fetchall()
@@ -1227,6 +1236,7 @@ def explorePage():
                                 JOIN profiles ON notifications.notificationSenderID = profiles.userID
                                 JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
                                 WHERE notificationRecipientID = ?
+                                ORDER BY notificationDateTime DESC
                                             """,
                        (userID,))
         notifications = cursor.fetchall()
@@ -1297,6 +1307,7 @@ def lattePage():
                                 JOIN profiles ON notifications.notificationSenderID = profiles.userID
                                 JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
                                 WHERE notificationRecipientID = ?
+                                ORDER BY notificationDateTime DESC
                                             """,
                        (userID,))
         notifications = cursor.fetchall()
@@ -1362,6 +1373,7 @@ def likedVideosPage():
                                     JOIN profiles ON notifications.notificationSenderID = profiles.userID
                                     JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
                                     WHERE notificationRecipientID = ?
+                                    ORDER BY notificationDateTime DESC
                                                 """,
                        (userID,))
         notifications = cursor.fetchall()
@@ -1424,6 +1436,7 @@ def watchHistory():
                                 JOIN profiles ON notifications.notificationSenderID = profiles.userID
                                 JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
                                 WHERE notificationRecipientID = ?
+                                ORDER BY notificationDateTime DESC
                                 """,
                        (userID,))
         notifications = cursor.fetchall()
@@ -1487,6 +1500,7 @@ def userPlaylist():
                                     JOIN profiles ON notifications.notificationSenderID = profiles.userID
                                     JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
                                     WHERE notificationRecipientID = ?
+                                    ORDER BY notificationDateTime DESC
                                     """,
                        (userID,))
         notifications = cursor.fetchall()
