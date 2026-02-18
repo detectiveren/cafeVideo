@@ -14,8 +14,12 @@ document.addEventListener("DOMContentLoaded", function() {
 
             if (isSubscribed) {
                 subscribeButton.textContent = "Subscribe";
+                subscribeButton.classList.remove("cafe-subscribed-button")
+                subscribeButton.classList.add("cafe-comment-button")
             } else {
                 subscribeButton.textContent = "Subscribed";
+                subscribeButton.classList.remove("cafe-comment-button")
+                subscribeButton.classList.add("cafe-subscribed-button")
             }
         });
     }

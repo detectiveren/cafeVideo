@@ -416,9 +416,28 @@ def watchPage():
                                (userID,))
                 notifications = cursor.fetchall()
                 print(notifications)
+
+                # Retrieve playlists by the user
+                # Fetch the playlists created by the user
+                cursor.execute("""
+                                        SELECT playlists.playlistID, playlists.userID, playlists.playlistName, playlists.playlistType, 
+                                        playlists.visibilityType, accounts.username, profiles.profilePicture, 
+                                        profileColorSets.profilePictureBorderColor, COUNT(playlist_contents.videoID) AS videoCount
+                                        FROM playlists
+                                        JOIN accounts ON playlists.userID = accounts.userID
+                                        JOIN profiles ON profiles.userID = accounts.userID
+                                        JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
+                                        LEFT JOIN playlist_contents ON playlists.playlistID = playlist_contents.playlistID
+                                        WHERE playlists.userID = ?
+                                        GROUP BY playlists.playlistID
+                                        ORDER BY playlists.playlistID DESC
+                                    """, (userID,))
+                userPlaylists = cursor.fetchall()  # List of tuples
+
             else:
                 profilePicture = ["profilepicturetest.png"]
                 notifications = []
+                userPlaylists = []
 
             return render_template('watch.html', video=video, username=username, videos=videos,
                                    creatorUsername=creatorUsername, comments=comments, userID=userID,
@@ -426,7 +445,8 @@ def watchPage():
                                    currentViewCount=currentViewCount, num_of_subscribers=num_of_subscribers,
                                    isSubscribedToChannel=isSubscribedToChannel, num_of_likes=num_of_likes,
                                    isLikedVideo=isLikedVideo, datePublished=datePublished, time_ago=time_ago,
-                                   profilePicture=profilePicture, notifications=notifications, viewSimplifier=viewSimplify)
+                                   profilePicture=profilePicture, notifications=notifications,
+                                   viewSimplifier=viewSimplify, userPlaylists=userPlaylists)
         else:
             return "Video not found", 404
     else:
@@ -1463,12 +1483,14 @@ def userPlaylist():
         cursor.execute("""
                         SELECT playlists.playlistID, playlists.userID, playlists.playlistName, playlists.playlistType, 
                         playlists.visibilityType, accounts.username, profiles.profilePicture, 
-                        profileColorSets.profilePictureBorderColor
+                        profileColorSets.profilePictureBorderColor, COUNT(playlist_contents.videoID) AS videoCount
                         FROM playlists
                         JOIN accounts ON playlists.userID = accounts.userID
                         JOIN profiles ON profiles.userID = accounts.userID
                         JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
+                        LEFT JOIN playlist_contents ON playlists.playlistID = playlist_contents.playlistID
                         WHERE playlists.userID = ?
+                        GROUP BY playlists.playlistID
                         ORDER BY playlists.playlistID DESC
                     """, (userID,))
         userPlaylists = cursor.fetchall()  # List of tuples
@@ -1538,6 +1560,19 @@ def playlistCreate():
             conn.commit()
 
         return redirect(request.referrer)
+    else:
+        return abort(404)
+
+
+@cafe.route("/playlists/add", methods=["POST"])
+def playlistAdd():
+    if request.method == "POST":
+        try:
+            userID = session.get('userID')
+        except:
+            return redirect(url_for('indexPage'))
+
+
     else:
         return abort(404)
 

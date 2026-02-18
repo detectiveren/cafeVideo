@@ -735,6 +735,11 @@ video {
     line-height: 0.5;
 }
 
+.cafe-small-box-title {
+    font-weight: bold;
+    margin-left: 5px;
+}
+
 .account-link {
     background-color: rgba(0,0,0,0);
     padding: 0;
@@ -1112,6 +1117,7 @@ video {
     border-bottom-left-radius: 5px;
     border-bottom-right-radius: 5px;
     overflow: auto;
+    z-index: 1100;
 }
 
 .hidden {
@@ -1217,7 +1223,7 @@ video {
     width: 440px;
     height: 440px;
     float: right;
-    right: 0;
+    right: 29px;
     display: block;
     text-align: left;
     border-bottom-left-radius: 5px;
@@ -1225,6 +1231,8 @@ video {
     overflow: auto;
     margin-top: -15px;
     color: White;
+    position: absolute;
+    z-index: 1000;
 }
 
 .cafe-playlist-create-box.hidden {
@@ -1278,15 +1286,26 @@ video {
 
 .cafe-playlist-contents {
     display: flex;
-    flex-direction: row;
-    gap: 10px;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-left: 5px;
+}
+
+.cafe-playlist-add-contents {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 25px;
+    margin-left: 20px;
+    margin-bottom: 7.5px;
+    width: 100%;
+    min-height: 110px;
 }
 
 .cafe-playlists-contents-box {
     border-radius: 5px;
     border: 2px solid #C78A4B;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5); /* Subtle shadow for depth */
-    width: 250px;
+    width: 290px;
     height: 100px;
 }
 
@@ -1296,12 +1315,46 @@ video {
     gap: 10px;
 }
 
+.cafe-margin-top {
+    margin-top: 30px;
+}
+
 .cafe-playlists-contents-margin {
     margin-left: 5px;
 }
 
 .cafe-playlists-contents-profile-name-line {
     line-height: 0.6;
+}
+
+.cafe-truncate {
+    max-width: 250px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cafe-addToPlaylist-box {
+    border-radius: 5px;
+    border: 2px solid #C78A4B;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5); /* Subtle shadow for depth */
+    width: 100%;
+    min-height: 100px;
+}
+
+
+.cafe-playlist-header-fix {
+    line-height: 1;
+}
+
+.cafe-subscribed-button {
+    width: 100px;
+    border-radius: 5px;
+    text-decoration: None;
+    background-color: #3a4c4b;
+    color: white;
+    border: none;
+    align-self: flex-end;
 }
 
 body, html {

@@ -16,7 +16,7 @@
                     <div class="cafe-watch-body">
                         <div class="video-container">
                             <video width="960" height="540" controls>
-                            <source src="{{ url_for('static', filename='videos/' + video[5]) }}" type="video/mp4">
+                                <source src="{{ url_for('static', filename='videos/' + video[5]) }}" type="video/mp4">
                                 Your browser does not support the video tag.
                             </video>
                         </div>
@@ -64,7 +64,7 @@
                                         <div class="cafe-watch-subscribe-button">
                                             <button
                                                     id="subscribeButton"
-                                                    class="cafe-comment-button"
+                                                    class="{{ 'cafe-subscribed-button' if isSubscribedToChannel else 'cafe-comment-button' }}"
                                                     data-url="{{ url_for('subscribeToUser', creatorID=creatorUserID) }}">
                                                     {{ 'Subscribed' if isSubscribedToChannel else 'Subscribe' }}
                                             </button>
@@ -96,14 +96,32 @@
                                     <p>Upload Date</p>
                                 </div>
                                 <p class="cafe-align-description-contents">{{ datePublished }}</p>
+                                {% if username %}
+                                <div class="cafe-watch-video-tags-title">
+                                    <p>Share</p>
+                                </div>
+                                <div class="cafe-align-description-contents">
+                                    <br>
+                                    <button
+                                            id="showPlaylists"
+                                            class="cafe-comment-button"
+                                            data-url="">
+                                            Add to Playlist
+                                    </button>
+                                    <button
+                                            id="Save"
+                                            class="cafe-comment-button"
+                                            data-url="">
+                                            Save
+                                    </button>
+                                    <br><br>
+                                </div>
+                                {% endif %}
                             </div>
+                            {% if username %}
+                                {% include "components/addToPlaylist.html" %}
+                            {% endif %}
                         </div>
-                        <!--
-                        <form action="/commentOnVideo" method="POST" class="cafe-login-details">
-                            <input type="text" name="comment" placeholder="Comment on this video" required><br><br>
-                            <button type="submit">Post comment</button>
-                        </form>
-                        -->
                         {% if error %}
                             <p style="color: red">{{error}}</p>
                         {% endif %}

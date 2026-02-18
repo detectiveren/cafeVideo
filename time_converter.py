@@ -24,11 +24,11 @@ def time_ago(timestamp):
         elif seconds < 604800:
             days = seconds // 86400
             result = f"{int(days)} day{'s' if days > 1 else ''} ago"
-        elif seconds < 2419200:
+        elif seconds < 2629800:
             weeks = seconds // 604800
             result = f"{int(weeks)} week{'s' if weeks > 1 else ''} ago"
-        elif seconds < 29030400:
-            months = seconds // 2419200
+        elif seconds < 31557600:
+            months = seconds // 2629800
             result = f"{int(months)} month{'s' if months > 1 else ''} ago"
         else:
             years = seconds // 31557600
