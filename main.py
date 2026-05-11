@@ -63,8 +63,7 @@ def connect_to_database():
 @cafe.route('/')
 def indexPage():
     """The home page for cafeVideo"""
-    conn = sqlite3.connect(cafeDatabasePath)
-    conn.execute('PRAGMA foreign_keys = ON')
+    conn = connect_to_database()
     cursor = conn.cursor()
     username = session.get("username")
     userID = session.get("userID")
@@ -169,7 +168,6 @@ def loginAuthAPI():
         password = request.form['password']
 
         conn = connect_to_database()
-        conn.execute('PRAGMA foreign_keys = ON')
         cursor = conn.cursor()
 
         # Fetch user from accounts table
@@ -221,8 +219,7 @@ def upload():
 
     # If the user is not logged in, send them to the login page
     if username:
-        conn = sqlite3.connect(cafeDatabasePath)
-        conn.execute('PRAGMA foreign_keys = ON')
+        conn = connect_to_database()
         cursor = conn.cursor()
 
         cursor.execute("""
@@ -320,8 +317,7 @@ def watchPage():
 
     if videoID:
         # Retrieve video details
-        conn = sqlite3.connect(cafeDatabasePath)
-        conn.execute('PRAGMA foreign_keys = ON')
+        conn = connect_to_database()
         cursor = conn.cursor()
 
         cursor.execute("""SELECT * 
@@ -497,8 +493,7 @@ def searchForVideo():
     userID = session.get("userID")
 
     if searchQuery:
-        conn = sqlite3.connect(cafeDatabasePath)
-        conn.execute('PRAGMA foreign_keys = ON')
+        conn = connect_to_database()
         cursor = conn.cursor()
 
         # Fetch the videos with the most views for the search results
@@ -568,8 +563,7 @@ def getAccountProfile():
     userID_session = session.get("userID")
 
     if userID:
-        conn = sqlite3.connect(cafeDatabasePath)
-        conn.execute('PRAGMA foreign_keys = ON')
+        conn = connect_to_database()
         cursor = conn.cursor()
 
         # Check if the userID exists
@@ -665,8 +659,7 @@ def redirectPage(channelURL):
     """The profile of the user by their channel URL"""
     viewerUserID = session.get('userID')
     viewerUsername = session.get("username")
-    conn = sqlite3.connect(cafeDatabasePath)
-    conn.execute('PRAGMA foreign_keys = ON')
+    conn = connect_to_database()
     cursor = conn.cursor()
 
     cursor.execute("SELECT channelURLEnabled FROM profiles WHERE channelURL = ?", (channelURL,))
@@ -700,8 +693,7 @@ def subscribeToUser():
         return redirect(url_for('indexPage'))
 
     if int(creatorUserID) != int(subscriberUserID):
-        conn = sqlite3.connect(cafeDatabasePath)
-        conn.execute('PRAGMA foreign_keys = ON')
+        conn = connect_to_database()
         cursor = conn.cursor()
 
         cursor.execute("SELECT * FROM subscriptions WHERE userID = ? AND subscribedToUserID = ?",
@@ -746,8 +738,7 @@ def likeVideoFromCreatorID():
     userID = session["userID"]
 
     if int(creatorUserID) != int(userID):
-        conn = sqlite3.connect(cafeDatabasePath)
-        conn.execute('PRAGMA foreign_keys = ON')
+        conn = connect_to_database()
         cursor = conn.cursor()
 
         cursor.execute("SELECT * FROM videos WHERE videoID = ?", (videoID,))
@@ -797,8 +788,7 @@ def likeCommentFromCommenterID():
     userID = session['userID']
 
     if int(commenterID) != int(userID):
-        conn = sqlite3.connect(cafeDatabasePath)
-        conn.execute('PRAGMA foreign_keys = ON')
+        conn = connect_to_database()
         cursor = conn.cursor()
 
         cursor.execute("SELECT * FROM comments WHERE commentID = ?", (commentID,))
@@ -850,8 +840,7 @@ def likeReplyFromReplierID():
     userID = session["userID"]
 
     if int(replierID) != int(userID):
-        conn = sqlite3.connect(cafeDatabasePath)
-        conn.execute('PRAGMA foreign_keys = ON')
+        conn = connect_to_database()
         cursor = conn.cursor()
 
         cursor.execute("SELECT * FROM replies WHERE replyID = ?", (replyID,))
@@ -888,8 +877,7 @@ def editUserProfile():
     userID = session.get("userID")
 
     if username:
-        conn = sqlite3.connect(cafeDatabasePath)
-        conn.execute('PRAGMA foreign_keys = ON')
+        conn = connect_to_database()
         cursor = conn.cursor()
 
         cursor.execute("""
@@ -961,8 +949,7 @@ def getAccountSettings():
     userID = session.get("userID")
 
     if username:
-        conn = sqlite3.connect(cafeDatabasePath)
-        conn.execute('PRAGMA foreign_keys = ON')
+        conn = connect_to_database()
         cursor = conn.cursor()
 
         cursor.execute("""
@@ -1116,8 +1103,7 @@ def pageNotFound(error):
     userID = session.get('userID')
 
     if username:
-        conn = sqlite3.connect(cafeDatabasePath)
-        conn.execute('PRAGMA foreign_keys = ON')
+        conn = connect_to_database()
         cursor = conn.cursor()
 
         cursor.execute("""
@@ -1156,8 +1142,7 @@ def accountSubscriptions():
     userID = session.get("userID")
 
     if username:
-        conn = sqlite3.connect(cafeDatabasePath)
-        conn.execute('PRAGMA foreign_keys = ON')
+        conn = connect_to_database()
         cursor = conn.cursor()
 
         # Fetch the latest videos for the subscriptions feed
@@ -1213,8 +1198,7 @@ def accountSubscriptions():
 
 @cafe.route('/explore')
 def explorePage():
-    conn = sqlite3.connect(cafeDatabasePath)
-    conn.execute('PRAGMA foreign_keys = ON')
+    conn = connect_to_database()
     cursor = conn.cursor()
     username = session.get("username")
     userID = session.get("userID")
@@ -1275,8 +1259,7 @@ def explorePage():
 def lattePage():
     username = session.get("username")
     userID = session.get("userID")
-    conn = sqlite3.connect(cafeDatabasePath)
-    conn.execute('PRAGMA foreign_keys = ON')
+    conn = connect_to_database()
     cursor = conn.cursor()
 
     # Fetch the latest videos for the new videos feed
@@ -1349,8 +1332,7 @@ def likedVideosPage():
     userID = session.get("userID")
 
     if username:
-        conn = sqlite3.connect(cafeDatabasePath)
-        conn.execute('PRAGMA foreign_keys = ON')
+        conn = connect_to_database()
         cursor = conn.cursor()
 
         # Fetch the latest videos for the liked videos section
@@ -1412,8 +1394,7 @@ def watchHistory():
     userID = session.get("userID")
 
     if username:
-        conn = sqlite3.connect(cafeDatabasePath)
-        conn.execute('PRAGMA foreign_keys = ON')
+        conn = connect_to_database()
         cursor = conn.cursor()
 
         # Fetch the latest videos for the watch history section
@@ -1475,8 +1456,7 @@ def userPlaylist():
     userID = session.get("userID")
 
     if username:
-        conn = sqlite3.connect(cafeDatabasePath)
-        conn.execute('PRAGMA foreign_keys = ON')
+        conn = connect_to_database()
         cursor = conn.cursor()
 
         # Fetch the playlists created by the user
@@ -1549,8 +1529,7 @@ def playlistCreate():
 
         print(f"Playlist Name: {playlistName}\nPlaylist Description: {playlistDescription}\nPlaylistVisibility: {playlistVisibility}")
 
-        conn = sqlite3.connect(cafeDatabasePath)
-        conn.execute('PRAGMA foreign_keys = ON')
+        conn = connect_to_database()
         cursor = conn.cursor()
 
         if playlistName:
@@ -1564,17 +1543,84 @@ def playlistCreate():
         return abort(404)
 
 
-@cafe.route("/playlists/add", methods=["POST"])
-def playlistAdd():
+@cafe.route("/playlist/<playlistID>/add", methods=["POST"])
+def playlistAdd(playlistID):
     if request.method == "POST":
         try:
             userID = session.get('userID')
         except:
             return redirect(url_for('indexPage'))
-
-
+        
     else:
         return abort(404)
+
+
+@cafe.route("/playlist/<playlistID>/videos")
+def viewPlaylist(playlistID):
+    username = session.get('username')
+    userID = session.get('userID')
+
+    conn = connect_to_database()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM playlists WHERE playlistID = ?", (playlistID,))
+    playlistIDFound = cursor.fetchone()
+
+    if playlistIDFound:
+        print(f"Playlist ID: {playlistIDFound[0]} has been found!\nPlaylist Title: {playlistIDFound[2]}")
+
+        print(playlistIDFound[2])
+
+        cursor.execute("""
+                                SELECT profilePicture, profileColorSets.profilePictureBorderColor, channelURLEnabled, 
+                                        channelURL
+                                        FROM profiles 
+                                        JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
+                                        WHERE userID = ?""", (userID,))
+        profilePicture = cursor.fetchone()
+
+        cursor.execute("""
+                                SELECT profilePicture, profileColorSets.profilePictureBorderColor, accounts.userID, 
+                                accounts.username, channelURLEnabled, channelURL
+                                FROM profiles
+                                JOIN accounts ON profiles.userID = accounts.userID
+                                JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
+                                JOIN subscriptions ON subscriptions.subscribedToUserID = accounts.userID
+                                WHERE subscriptions.userID = ?""",
+                       (userID,))
+        subscriptionsInfo = cursor.fetchall()
+
+        cursor.execute("""
+                                SELECT notifications.*, profiles.profilePicture, profileColorSets.profilePictureBorderColor 
+                                FROM notifications
+                                JOIN profiles ON notifications.notificationSenderID = profiles.userID
+                                JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
+                                WHERE notificationRecipientID = ?
+                                ORDER BY notificationDateTime DESC
+                                            """,
+                       (userID,))
+        notifications = cursor.fetchall()
+
+        # Fetch the latest videos for the playlist section
+        cursor.execute("""
+                                SELECT videos.videoID, accounts.username, videos.videoTitle, videos.views, 
+                                videos.videoThumbnail, videos.datetime, profiles.profilePicture, 
+                                profileColorSets.profilePictureBorderColor
+                                FROM videos
+                                JOIN accounts ON videos.userID = accounts.userID
+                                JOIN profiles ON profiles.userID = accounts.userID
+                                JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
+                                JOIN playlist_contents ON playlist_contents.videoID = videos.videoID
+                                WHERE playlist_contents.playlistID = ?
+                                ORDER BY playlist_contents.videoID DESC  -- Shows newest first
+                            """, (playlistID,))
+        videos = cursor.fetchall()  # List of tuples
+
+        return render_template('playlist.html', username=username, videos=videos, userID=userID,
+                               time_ago=time_ago, profilePicture=profilePicture, subscriptionsInfo=subscriptionsInfo,
+                               notifications=notifications, playlistInfo=playlistIDFound)
+    else:
+        abort(404)
 
 
 cafe.run("192.168.1.114", 5000, debug=True)
