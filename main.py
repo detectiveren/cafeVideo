@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, url_for, session, jsonify, redirect, flash, abort
-import sqlite3, createAccount, post, os, modifyAccount
+import sqlite3, createAccount, post, os, modifyAccount, sql_commands
 from time_converter import time_ago, getVideoDatetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -68,73 +68,20 @@ def indexPage():
     username = session.get("username")
     userID = session.get("userID")
 
-    # Fetch the latest videos for the new videos feed
-    cursor.execute("""
-            SELECT videos.videoID, accounts.username, videos.videoTitle, videos.views, videos.videoThumbnail, 
-            videos.datetime, profiles.profilePicture, profileColorSets.profilePictureBorderColor, 
-            profiles.channelURLEnabled, profiles.channelURL
-            FROM videos
-            JOIN accounts ON videos.userID = accounts.userID
-            JOIN profiles ON profiles.userID = accounts.userID
-            JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
-            ORDER BY videoID DESC  -- Shows newest first
-        """)
-    videos = cursor.fetchall()  # List of tuples
+    videos = sql_commands.fetch_latest_videos()
 
     if username:
-        cursor.execute("""
-                                SELECT profilePicture, profileColorSets.profilePictureBorderColor, channelURLEnabled, 
-                                channelURL
-                                FROM profiles 
-                                JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
-                                WHERE userID = ?""", (userID,))
-        profilePicture = cursor.fetchone()
-        cursor.execute("""
-                          SELECT feature_access.featureID, feature_gating.featureName
-                          FROM feature_access
-                          JOIN feature_gating ON feature_access.featureID = feature_gating.featureID
-                          JOIN accounts ON feature_access.userID = accounts.userID
-                          WHERE accounts.userID = ?  
-                        """, (userID,))
-        featureAccess = cursor.fetchall()
+        profilePicture = sql_commands.fetch_profile_info("minimal", userID)
+        featureAccess = sql_commands.fetch_account_info("feature_access", userID)
         try:
             print(featureAccess[0][0])
         except:
             pass
-        cursor.execute("""
-                                SELECT profilePicture, profileColorSets.profilePictureBorderColor, accounts.userID, 
-                                accounts.username, channelURLEnabled, channelURL
-                                FROM profiles
-                                JOIN accounts ON profiles.userID = accounts.userID
-                                JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
-                                JOIN subscriptions ON subscriptions.subscribedToUserID = accounts.userID
-                                WHERE subscriptions.userID = ?""", (userID,))
-        subscriptionsInfo = cursor.fetchall()
+        subscriptionsInfo = sql_commands.fetch_subscription_info(userID)
         # Fetch the latest videos for the subscriptions feed
-        cursor.execute("""
-                            SELECT videos.videoID, accounts.username, videos.videoTitle, videos.views, 
-                            videos.videoThumbnail, videos.datetime, profiles.profilePicture, 
-                            profileColorSets.profilePictureBorderColor, profiles.channelURLEnabled, profiles.channelURL
-                            FROM videos
-                            JOIN accounts ON videos.userID = accounts.userID
-                            JOIN profiles ON profiles.userID = accounts.userID
-                            JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
-                            JOIN subscriptions ON subscriptions.subscribedToUserID = accounts.userID
-                            WHERE subscriptions.userID = ?
-                            ORDER BY videoID DESC  -- Shows newest first
-                            LIMIT 12
-                        """, (userID,))
-        subscription_videos = cursor.fetchall()
-        cursor.execute("""
-                                SELECT notifications.*, profiles.profilePicture, profileColorSets.profilePictureBorderColor 
-                                FROM notifications
-                                JOIN profiles ON notifications.notificationSenderID = profiles.userID
-                                JOIN profileColorSets ON profiles.profileColorTheme = profileColorSets.profileSetID
-                                WHERE notificationRecipientID = ?
-                                ORDER BY notificationDateTime DESC
-                                            """,
-                       (userID,))
-        notifications = cursor.fetchall()
+        subscription_videos = sql_commands.fetch_subscription_videos("latest", userID)
+
+        notifications = sql_commands.fetch_user_notifications("minimal", userID)
         conn.close()
         return render_template('index.html', username=username, videos=videos, userID=userID,
                                time_ago=time_ago, profilePicture=profilePicture, subscriptionsInfo=subscriptionsInfo,
@@ -144,8 +91,6 @@ def indexPage():
         profilePicture = ["profilepicturetest.png"]
         conn.close()
         return redirect(url_for('explorePage'))
-    # return render_template('index.html', username=username, videos=videos, userID=userID,
-    #                       time_ago=time_ago, profilePicture=profilePicture)
 
 
 @cafe.route('/login')
@@ -1527,7 +1472,8 @@ def playlistCreate():
         playlistDescription = request.form["description"]
         playlistVisibility = request.form["visibility"]
 
-        print(f"Playlist Name: {playlistName}\nPlaylist Description: {playlistDescription}\nPlaylistVisibility: {playlistVisibility}")
+        print(
+            f"Playlist Name: {playlistName}\nPlaylist Description: {playlistDescription}\nPlaylistVisibility: {playlistVisibility}")
 
         conn = connect_to_database()
         cursor = conn.cursor()
@@ -1550,7 +1496,7 @@ def playlistAdd(playlistID):
             userID = session.get('userID')
         except:
             return redirect(url_for('indexPage'))
-        
+
     else:
         return abort(404)
 
@@ -1623,4 +1569,4 @@ def viewPlaylist(playlistID):
         abort(404)
 
 
-cafe.run("192.168.1.114", 5000, debug=True)
+cafe.run("localhost", 5000, debug=True)
